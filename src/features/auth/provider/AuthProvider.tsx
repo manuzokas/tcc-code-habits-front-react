@@ -72,10 +72,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (result.status === "complete") {
         await setActive({ session: result.createdSessionId });
-
-        // Clerk ainda está carregando user depois do login — aguardamos o useEffect atualizar o contexto.
-
-        // Redirecionamento é feito via useEffect
       } else {
         throw new Error("Login incompleto.");
       }
@@ -124,8 +120,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         },
       });
       
-
-      // Atualiza o contexto após salvar no Clerk
       setUser((prev) =>
         prev
           ? {

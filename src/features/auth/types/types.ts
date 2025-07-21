@@ -2,7 +2,7 @@
 export interface AuthFormData {
     email: string;
     password: string;
-    name?: string; // Opcional para registro
+    name?: string; 
   }
   
   export type AuthMode = 'login' | 'register';

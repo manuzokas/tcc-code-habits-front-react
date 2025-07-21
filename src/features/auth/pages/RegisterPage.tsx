@@ -9,7 +9,7 @@ import { PATHS } from "@/app/routes/path";
 import { useState } from "react";
 
 export default function RegisterPage() {
-  const { register, isLoading, error } = useAuth(); // Certifique-se que o useAuth retorna 'register'
+  const { register, isLoading, error } = useAuth(); 
   const [localError, setLocalError] = useState<string | null>(null);
 
   const handleSubmit = async (data: {

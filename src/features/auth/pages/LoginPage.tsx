@@ -3,7 +3,7 @@ import { AuthHeader } from "../components/AuthHeader";
 import { AuthForm } from "../components/AuthForm";
 import { AuthSocialButtons } from "../components/AuthSocialButtons";
 import { motion } from "framer-motion";
-import { useAuth } from "@/features/auth/hooks/useAuth"; // importe seu hook de auth
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export default function LoginPage() {
   const { login, isLoading, error } = useAuth();
@@ -14,7 +14,6 @@ export default function LoginPage() {
     try {
       if (!login) throw new Error("Login function is not available.");
       await login(data.email, data.password);
-      // Após login, o redirecionamento é feito no AuthProvider via useEffect
     } catch (err) {
       if (err instanceof Error) {
         setLocalError(err.message);
