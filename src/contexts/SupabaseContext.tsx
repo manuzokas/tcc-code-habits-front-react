@@ -1,6 +1,6 @@
 // src/contexts/SupabaseContext.ts
 import { createContext } from "react";
-import { supabase } from "@/services/supabase";
+import { supabase } from "@/api/supabase";
 
 // tipagem para o valor do contexto
 export interface SupabaseContextType {

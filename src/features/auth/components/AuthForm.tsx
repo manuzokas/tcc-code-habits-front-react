@@ -1,6 +1,3 @@
-// src/features/auth/components/AuthForm.tsx
-"use client";
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/shared/components/atoms/Button";

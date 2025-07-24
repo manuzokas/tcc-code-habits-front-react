@@ -1,4 +1,4 @@
-import { cn } from "@/features/theme/utils/tw";
+import { cn } from "@/assets/styles/utils/tw";
 import { Tooltip, type TooltipProps } from "@/shared/components/atoms/Tooltip";
 
 interface BadgeProps {

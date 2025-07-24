@@ -56,9 +56,7 @@ Além disso, o projeto demonstra **boas práticas de engenharia de software**, a
 
 ### 🐘 Etapa 1: Iniciar Supabase Local
 
-```
 supabase start
-```
 
 * Acesse o Studio em `http://localhost:54323`.
 * Crie as tabelas: `profiles`, `mood_logs`, `dev_health_metrics`, etc.

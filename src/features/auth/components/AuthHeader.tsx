@@ -1,4 +1,3 @@
-// src/features/auth/components/AuthHeader.tsx
 import { Terminal } from "lucide-react";
 import { motion } from "framer-motion";
 

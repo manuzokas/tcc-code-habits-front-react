@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cn } from "@/features/theme/utils/tw";
+import { cn } from "@/assets/styles/utils/tw";
 
 export interface TooltipProps {
   content: string;

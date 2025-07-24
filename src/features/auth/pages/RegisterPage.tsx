@@ -5,7 +5,7 @@ import { AuthForm } from "../components/AuthForm";
 import { AuthSocialButtons } from "../components/AuthSocialButtons";
 import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { PATHS } from "@/app/routes/path";
+import { PATHS } from "@/routes/path";
 import { useState } from "react";
 
 export default function RegisterPage() {

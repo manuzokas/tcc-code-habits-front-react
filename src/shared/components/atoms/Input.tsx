@@ -1,4 +1,4 @@
-import { cn } from "@/features/theme/utils/tw";
+import { cn } from "@/assets/styles/utils/tw";
 import { forwardRef } from "react";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement>

@@ -1,17 +1,12 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "@/App";
-import "@/App.css";
+import "@/assets/styles/App.css";
 import { ClerkProvider } from "@clerk/clerk-react";
-import { SupabaseProvider } from "@/providers/SupabaseProvider";
+import { SupabaseProvider } from "@/contexts/SupabaseProvider";
 
-// chave publica do clerk importada do .env
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-/*
-ClerkProvider: serviço de autenticação terceirizado
-Supabase: Baas terceirizado para back-end
-*/
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <ClerkProvider publishableKey={clerkPubKey}>

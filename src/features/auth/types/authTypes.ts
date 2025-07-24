@@ -1,4 +1,4 @@
-import type { ApiUser, PersonaType } from "@/shared/types/personas";
+import type { ApiUser, PersonaType } from "@/features/onboarding/types/personas";
 
 export type User = ApiUser & {
   persona?: PersonaType;

@@ -1,5 +1,5 @@
-import { useTheme } from "@/features/theme/hooks/useTheme";
-import { cn } from "@/features/theme/utils/tw";
+import { useTheme } from "@/shared/contexts/theme/hooks/useTheme";
+import { cn } from "@/assets/styles/utils/tw";
 import { Sun, Moon } from "lucide-react";
 
 export function ThemeToggle({ className }: { className?: string }) {
