@@ -1,7 +1,14 @@
-import { Icon } from "@/shared/components/atoms/Icon";
+import { Icon } from "@/shared/components/atoms/Icon"; // Certifique-se de que Icon pode aceitar 'string' ou ajuste a tipagem
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
+
+// Defina um tipo para os nomes dos ícones se sua componente Icon.tsx precisar disso
+// Exemplo (adapte conforme sua biblioteca de ícones ou implementação de Icon):
+type IconName = "LayoutDashboard" | "Activity" | "Timer" | "Music" | "Trophy" | "Settings" | "X" | "Code" | "LogOut";
+// Se sua Icon componente aceitar qualquer string, você pode remover este tipo e usar 'string' diretamente.
+// Se sua Icon for de uma lib como 'lucide-react', importe seus tipos:
+// import type { IconNode } from 'lucide-react'; ou verifique a documentação da sua Icon
 
 interface SidebarProps {
   isOpen: boolean;
@@ -9,9 +16,25 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
-  const { user, logout } = useAuth();
+  // Agora desestruturamos 'user', 'profile', 'isLoadingProfile' e 'signOut' do useAuth
+  const { user, profile, isLoadingProfile, signOut } = useAuth();
 
-  const navItems = [
+  // Constantes para cálculo de XP e Nível
+  const XP_PER_LEVEL = 1000; // XP necessária para cada nível (ajuste como no useGamification)
+
+  // Dados do usuário para exibição
+  const userName = profile?.username || user?.email?.split('@')[0] || "Usuário"; // Preferir username do profile, senão email, senão default
+  const userInitial = userName.charAt(0).toUpperCase();
+  const userEmail = user?.email || "email@exemplo.com";
+
+  // Dados de Gamificação (XP e Nível)
+  const userXp = profile?.xp ?? 0; // Pega a XP do profile, default para 0
+  const userLevel = Math.floor(userXp / XP_PER_LEVEL) + 1;
+  const xpCurrentLevel = userXp % XP_PER_LEVEL;
+  const xpProgressPercentage = (xpCurrentLevel / XP_PER_LEVEL) * 100;
+
+
+  const navItems: { name: string; icon: IconName; path: string }[] = [ // Usando IconName para tipar
     { name: "Dashboard", icon: "LayoutDashboard", path: "/dashboard" },
     { name: "Métricas", icon: "Activity", path: "/metrics" },
     { name: "Timer", icon: "Timer", path: "/timer" },
@@ -51,26 +74,28 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
         {/* Perfil do Usuário */}
         <div className="flex items-center gap-3 mb-8 p-3 rounded-lg bg-gray-900">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center text-white font-bold">
-            {user?.name?.charAt(0) || "D"}
+            {isLoadingProfile ? "" : userInitial} {/* Exibe inicial apenas quando o perfil carregar */}
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-medium truncate">
-              {user?.name || "Dev"}
+              {isLoadingProfile ? "Carregando..." : userName} {/* Exibe nome ou "Carregando..." */}
             </p>
-            <p className="text-xs text-gray-400 truncate">{user?.email}</p>
+            <p className="text-xs text-gray-400 truncate">
+              {userEmail}
+            </p>
           </div>
         </div>
 
-        {/* Barra de Progresso */}
+        {/* Barra de Progresso XP */}
         <div className="mb-8">
           <div className="flex justify-between text-xs mb-1">
-            <span className="font-semibold">Nível 4</span>
-            <span className="text-gray-400">120/200 XP</span>
+            <span className="font-semibold">Nível {userLevel}</span>
+            <span className="text-gray-400">{xpCurrentLevel}/{XP_PER_LEVEL} XP</span>
           </div>
           <div className="w-full bg-gray-800 rounded-full h-2">
             <div
               className="bg-gradient-to-r from-green-500 to-blue-500 h-2 rounded-full"
-              style={{ width: "60%" }}
+              style={{ width: `${xpProgressPercentage}%` }} // Ajusta a largura com base na % de XP
             ></div>
           </div>
         </div>
@@ -98,9 +123,9 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
           </ul>
         </nav>
 
-        {/* Logout */}
+        {/* Botão de Sair */}
         <button
-          onClick={logout}
+          onClick={signOut}
           className="mt-auto flex items-center gap-3 p-3 rounded-lg text-gray-300 hover:bg-gray-800/50"
         >
           <Icon name="LogOut" className="w-5 h-5 text-red-500" />
