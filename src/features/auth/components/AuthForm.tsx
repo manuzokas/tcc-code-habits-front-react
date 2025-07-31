@@ -1,3 +1,4 @@
+// src/features/auth/components/AuthForm.tsx
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/shared/components/atoms/Button";
@@ -7,7 +8,11 @@ import type { AuthMode } from "@/features/auth/types/types";
 
 interface AuthFormProps {
   mode: AuthMode;
-  onSubmit: (data: { email: string; password: string; name?: string }) => void;
+  onSubmit: (data: {
+    email: string;
+    password: string;
+    name: string; 
+  }) => void;
   isLoading?: boolean;
 }
 
@@ -18,7 +23,16 @@ export function AuthForm({ mode, onSubmit, isLoading }: AuthFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit({ email, password, ...(mode === "register" && { name }) });
+
+    if (mode === "register" && !name.trim()) {
+      return; 
+    }
+
+    onSubmit({
+      email,
+      password,
+      name: name.trim(), 
+    });
   };
 
   return (
@@ -42,6 +56,8 @@ export function AuthForm({ mode, onSubmit, isLoading }: AuthFormProps) {
             required
             className="bg-gray-800 border-gray-700 text-gray-200 font-mono"
             placeholder="dev_example"
+            minLength={2}
+            maxLength={50}
           />
         </div>
       )}

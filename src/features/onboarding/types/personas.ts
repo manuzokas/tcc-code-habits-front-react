@@ -1,48 +1,49 @@
-import type { IconName } from "../../../shared/components/atoms/Icon";
+// src/features/onboarding/types/personas.ts
+export type PersonaId = 'chronic' | 'anxious' | 'disorganized' | 'conscious';
+
+export type PersonaTrait = string;
+
+export type PersonaRecommendations = {
+  hydration: string[];
+  breaks: string[];
+  exercise: string[];
+  nutrition: string[];
+  sleep: string[];
+  mental: string[];
+};
 
 export type PersonaType = {
-    id: string;
-    name: string;
-    description: string;
-    traits: string[];
-    color: string;
-    recommendations: {
-      hydration: string[];
-      breaks: string[];
-      exercise: string[];
-      nutrition: string[];
-      sleep: string[];
-      mental: string[];
-    };
-  };
-  
-  export type QuestionType = {
-    id: string;
-    text: string;
-    options: {
-      value: string;
-      text: string;
-      personaWeights: Record<string, number>;
-    }[];
-  };
+  id: PersonaId;
+  name: string;
+  description: string;
+  traits: PersonaTrait[];
+  color: string;
+  recommendations: PersonaRecommendations;
+};
 
-  export type HealthTip = {
-    title: string;
-    description: string;
-    category: string;
-    icon: IconName;
-    recommendedFor?: string[];
-  };
-  
-  export type UserPersona = {
-    persona: PersonaType;
-    score: number;
-  };
-  
-  export type ApiUser = {
-    id: string;
-    name: string;
-    email: string;
-    hasCompletedPersonaQuiz: boolean;
-    persona?: PersonaType; 
-  };
+export type QuestionOption = {
+  value: string;
+  text: string;
+  personaWeights: Record<PersonaId, number>;
+};
+
+export type QuestionType = {
+  id: string;
+  text: string;
+  description?: string;
+  options: QuestionOption[];
+};
+
+export type QuizAnswers = Record<string, string>;
+
+export type QuizResult = {
+  persona: PersonaType;
+  score: number;
+  recommendations: PersonaRecommendations;
+};
+
+export type PersonaData = {
+  answers: QuizAnswers;
+  result: QuizResult;
+  completedAt: string;
+};

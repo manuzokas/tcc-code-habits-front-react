@@ -47,7 +47,7 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
                 </h2>
                 <span className="text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1">
                   <Icon name="Sparkles" className="w-3 h-3" />
-                  <span> complete missões</span>
+                  <span> complete tasks</span>
                 </span>
               </div>
 
@@ -90,7 +90,7 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
             <div className="flex justify-end mb-3">
               <h3 className="text-sm font-semibold text-yellow-300 bg-emerald-900/30 px-3 py-1 rounded-full inline-flex items-center gap-1 border border-yellow-400">
                 <Icon name="Sparkles" className="w-3 h-3" />
-                Complete suas missões para ganhar XPs!
+                Complete suas tasks para ganhar XPs!
               </h3>
             </div>
 

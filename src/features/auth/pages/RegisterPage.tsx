@@ -1,5 +1,4 @@
 // src/features/auth/pages/RegisterPage.tsx
-
 import { AuthHeader } from "../components/AuthHeader";
 import { AuthForm } from "../components/AuthForm";
 import { AuthSocialButtons } from "../components/AuthSocialButtons";
@@ -7,38 +6,55 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/path";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function RegisterPage() {
-  const { register, isLoading, error } = useAuth(); 
-  const [localError, setLocalError] = useState<string | null>(null);
+  const { signUp, signInWithProvider, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const handleSubmit = async (data: {
     email: string;
     password: string;
-    name?: string;
+    name: string;
   }) => {
+    setError(null);
+
     try {
-      if (!data.name) {
-        throw new Error("Nome é obrigatório");
-      }
-
-      if (!register) {
-        throw new Error("Função de registro não disponível");
-      }
-
-      await register({
-        name: data.name,
+      const { error } = await signUp({
         email: data.email,
         password: data.password,
+        name: data.name,
       });
 
-      // O redirecionamento é feito automaticamente pelo AuthContext
-    } catch (err) {
-      if (err instanceof Error) {
-        setLocalError(err.message);
-      } else {
-        setLocalError("Erro desconhecido ao registrar");
+      if (error) {
+        throw error;
       }
+
+      // Redireciona após registro bem-sucedido
+      navigate(PATHS.DASHBOARD);
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocorreu um erro durante o registro"
+      );
+    }
+  };
+
+  const handleSocialLogin = async (
+    provider: "github" | "google" | "gitlab"
+  ) => {
+    try {
+      setError(null);
+      await signInWithProvider(provider);
+      // O redirecionamento é tratado pelo AuthProvider
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Ocorreu um erro ao autenticar com o provedor"
+      );
     }
   };
 
@@ -54,18 +70,22 @@ export default function RegisterPage() {
             isLoading={isLoading}
           />
 
-          {(error || localError) && (
+          {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-center text-sm text-red-400 font-mono"
             >
-              {error || localError}
+              {error}
             </motion.div>
           )}
 
           <div className="mt-6">
-            <AuthSocialButtons mode="register" />
+            <AuthSocialButtons
+              mode="register"
+              onProviderClick={handleSocialLogin}
+              isLoading={isLoading}
+            />
           </div>
         </div>
 
@@ -76,7 +96,14 @@ export default function RegisterPage() {
           className="text-center text-sm text-gray-500 font-mono"
         >
           Já tem uma conta?{" "}
-          <a href={PATHS.LOGIN} className="text-blue-400 hover:text-blue-300">
+          <a
+            href={PATHS.LOGIN}
+            className="text-blue-400 hover:text-blue-300"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate(PATHS.LOGIN);
+            }}
+          >
             Faça login
           </a>
         </motion.div>

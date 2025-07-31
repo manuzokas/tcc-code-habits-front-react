@@ -1,26 +1,25 @@
-import { useState } from "react";
+// src/features/auth/pages/LoginPage.tsx
 import { AuthHeader } from "../components/AuthHeader";
 import { AuthForm } from "../components/AuthForm";
 import { AuthSocialButtons } from "../components/AuthSocialButtons";
 import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useState } from "react";
 
 export default function LoginPage() {
-  const { login, isLoading, error } = useAuth();
-  const [localError, setLocalError] = useState<string | null>(null);
+  const { signIn, signInWithProvider, isLoading } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: { email: string; password: string }) => {
-    setLocalError(null);
-    try {
-      if (!login) throw new Error("Login function is not available.");
-      await login(data.email, data.password);
-    } catch (err) {
-      if (err instanceof Error) {
-        setLocalError(err.message);
-      } else {
-        setLocalError("Erro desconhecido ao realizar login.");
-      }
-    }
+    setError(null);
+    const { error } = await signIn(data.email, data.password);
+    if (error) setError(error.message);
+  };
+
+  const handleSocialLogin = (provider: "github" | "google" | "gitlab") => {
+    signInWithProvider(provider).catch((err) => {
+      setError(err.message);
+    });
   };
 
   return (
@@ -35,18 +34,22 @@ export default function LoginPage() {
             isLoading={isLoading}
           />
 
-          {(error || localError) && (
+          {error && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mt-4 text-center text-sm text-red-400 font-mono"
             >
-              {error || localError}
+              {error}
             </motion.div>
           )}
 
           <div className="mt-6">
-            <AuthSocialButtons mode="login" />
+            <AuthSocialButtons
+              mode="login"
+              onProviderClick={handleSocialLogin}
+              isLoading={isLoading}
+            />
           </div>
         </div>
 

@@ -1,2 +1,7 @@
 [analytics]
 enabled = false
+
+[auth]
+signing_keys_path = "./signing_key.json"
+
+

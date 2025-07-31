@@ -16,7 +16,7 @@ export const HealthMetricsSection = () => {
           <Icon name="Activity" className="w-4 h-4 text-green-400" />
           Saúde do Dev
         </h3>
-        <span className="text-[0.65rem] bg-gray-700/50 text-gray-300 px-1.5 py-0.5 rounded-full">
+        <span className="text-[0.65rem] bg-green-900 border-1 border-green-300 font-semibold text-gray-300 px-1.5 py-0.5 rounded-full">
           Atualizado agora
         </span>
       </div>

@@ -1,137 +1,177 @@
-import { useEffect, useState } from "react";
-import { AuthContext } from "@/features/auth/context/AuthContext";
-import type { AuthContextType, User } from "@/features/auth/types/authTypes";
+import React, { useState, useEffect } from "react";
+import { AuthContext } from "./AuthContext";
+import { useSupabase } from "@/hooks/useSupabase";
+import type { Session, User, AuthError } from "@supabase/supabase-js";
+import type { PostgrestError } from "@supabase/supabase-js";
 
-import {
-  useUser as useClerkUser,
-  useSignIn,
-  useSignUp,
-  useClerk,
-} from "@clerk/clerk-react";
-import type { PersonaType } from "@/features/onboarding/types/personas";
+type AuthOperationError = AuthError | PostgrestError | null;
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const { isSignedIn, user: clerkUser } = useClerkUser();
-  const { signIn, isLoaded: signInLoaded } = useSignIn();
-  const { signUp, isLoaded: signUpLoaded } = useSignUp();
-  const { signOut, setActive } = useClerk();
-
+  const supabase = useSupabase();
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (isSignedIn && clerkUser) {
-      const metadata = clerkUser.unsafeMetadata || {};
-      setUser({
-        id: clerkUser.id,
-        name: clerkUser.fullName || "",
-        email: clerkUser.primaryEmailAddress?.emailAddress || "",
-        hasCompletedPersonaQuiz: metadata.hasCompletedPersonaQuiz === true,
-        persona: metadata.persona as PersonaType | undefined,
-      });
-    } else {
-      setUser(null);
-    }
-  }, [isSignedIn, clerkUser]);
+    const initializeAuth = async () => {
+      console.log("AuthProvider: Inicializando autenticação...");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      setSession(session);
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+      console.log("AuthProvider: Sessão inicial carregada:", session);
+    };
 
-  const getErrorMessage = (err: unknown): string => {
-    if (err instanceof Error) return err.message;
-    if (typeof err === "string") return err;
-    return "Ocorreu um erro inesperado.";
-  };
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log(`AuthProvider: Evento de autenticação: ${_event}`, session);
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
 
-  const login: AuthContextType["login"] = async (email, password) => {
-    if (!signInLoaded) return;
-    setIsLoading(true);
-    setError(null);
+    initializeAuth();
+    return () => {
+      console.log("AuthProvider: Desinscrevendo do listener de autenticação.");
+      subscription.unsubscribe();
+    };
+  }, [supabase]);
 
-    try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-      } else {
-        throw new Error("Login incompleto.");
+  const handleAuthError = (error: unknown): AuthOperationError => {
+    console.error("AuthProvider: handleAuthError chamado com:", error);
+    if (error === null) return null;
+    if (typeof error === "object" && error !== null) {
+      if ("message" in error && "code" in error) {
+        return error as AuthError | PostgrestError;
       }
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setIsLoading(false);
     }
+    return {
+      message: "Ocorreu um erro desconhecido",
+      name: "UnknownError",
+    } as unknown as AuthError;
   };
 
-  const register: AuthContextType["register"] = async (userData) => {
-    if (!signUpLoaded) return;
+  const signUp = async ({
+    email,
+    password,
+    name,
+  }: {
+    email: string;
+    password: string;
+    name: string;
+  }): Promise<{ error: AuthOperationError }> => {
     setIsLoading(true);
-    setError(null);
-
+    console.log("AuthProvider: Iniciando signUp para:", email);
     try {
-      await signUp.create({
-        emailAddress: userData.email,
-        password: userData.password,
-      });
-    } catch (err) {
-      setError(getErrorMessage(err));
-      throw err;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const completePersonaQuiz: AuthContextType["completePersonaQuiz"] = async (
-    persona
-  ) => {
-    if (!clerkUser) return;
-
-    try {
-      await clerkUser.update({
-        unsafeMetadata: {
-          hasCompletedPersonaQuiz: true,
-          persona,
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name },
+          emailRedirectTo: import.meta.env.VITE_SUPABASE_SIGNUP_REDIRECT,
         },
       });
 
-      setUser((prev) =>
-        prev
-          ? {
-              ...prev,
-              hasCompletedPersonaQuiz: true,
-              persona,
-            }
-          : null
-      );
-    } catch (err) {
-      console.error("Erro ao salvar metadados no Clerk:", err);
-      throw err;
+      if (authError) {
+        console.error("AuthProvider: Erro no signUp:", authError);
+        return { error: authError };
+      }
+
+      console.log("AuthProvider: signUp bem-sucedido. authData:", authData);
+
+      return { error: null };
+    } catch (error) {
+      console.error("AuthProvider: Erro inesperado no signUp (catch):", error);
+      return { error: handleAuthError(error) };
+    } finally {
+      setIsLoading(false);
+      console.log("AuthProvider: Finalizando signUp.");
     }
   };
 
-  const logout: AuthContextType["logout"] = async () => {
-    await signOut();
-    setUser(null);
+  const signIn = async (
+    email: string,
+    password: string
+  ): Promise<{ error: AuthOperationError }> => {
+    setIsLoading(true);
+    console.log("AuthProvider: Iniciando signIn para:", email);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) {
+        console.error("AuthProvider: Erro no signIn:", error);
+      } else {
+        console.log("AuthProvider: signIn bem-sucedido.");
+      }
+      return { error };
+    } catch (error) {
+      console.error("AuthProvider: Erro inesperado no signIn (catch):", error);
+      return { error: handleAuthError(error) };
+    } finally {
+      setIsLoading(false);
+      console.log("AuthProvider: Finalizando signIn.");
+    }
   };
 
-  const clearError: AuthContextType["clearError"] = () => setError(null);
+  const signInWithProvider = async (
+    provider: "github" | "google" | "gitlab"
+  ): Promise<{ error: AuthOperationError }> => {
+    setIsLoading(true);
+    console.log("AuthProvider: Iniciando signIn com provedor:", provider);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: { redirectTo: import.meta.env.VITE_SUPABASE_REDIRECT_URL },
+      });
+      if (error) {
+        console.error("AuthProvider: Erro no signInWithProvider:", error);
+      } else {
+        console.log(
+          "AuthProvider: signInWithProvider bem-sucedido (redirecionamento esperado)."
+        );
+      }
+      return { error };
+    } catch (error) {
+      console.error(
+        "AuthProvider: Erro inesperado no signInWithProvider (catch):",
+        error
+      );
+      return { error: handleAuthError(error) };
+    } finally {
+      setIsLoading(false);
+      console.log("AuthProvider: Finalizando signInWithProvider.");
+    }
+  };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        register,
-        login,
-        completePersonaQuiz,
-        logout,
-        isLoading,
-        error,
-        clearError,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const signOut = async (): Promise<{ error: AuthOperationError }> => {
+    console.log("AuthProvider: Iniciando signOut.");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("AuthProvider: Erro no signOut:", error);
+      } else {
+        console.log("AuthProvider: signOut bem-sucedido.");
+      }
+      return { error };
+    } catch (error) {
+      console.error("AuthProvider: Erro inesperado no signOut (catch):", error);
+      return { error: handleAuthError(error) };
+    }
+  };
+
+  const value = {
+    session,
+    user,
+    isLoading,
+    signUp,
+    signIn,
+    signInWithProvider,
+    signOut,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

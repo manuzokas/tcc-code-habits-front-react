@@ -1,3 +1,4 @@
+// src/routes/index.ts
 import { createBrowserRouter } from "react-router-dom";
 import { PATHS } from "@/routes/path";
 import { Home } from "@/pages/home/HomePage";
@@ -11,12 +12,11 @@ import { OnboardingPage } from "@/features/onboarding/pages/OnboardingPage";
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: (
-        <RootLayout />
-    ),
+    element: <RootLayout />, // rootLayout é o layout principal e contém useAuthRedirect
     children: [
+      // rotas PUBLICAS (nao exigem autenticacao)
       {
-        path: PATHS.HOME,
+        index: true,
         element: <Home />,
       },
       {
@@ -27,19 +27,23 @@ export const router = createBrowserRouter([
         path: PATHS.REGISTER,
         element: <RegisterPage />,
       },
+      // --- rotas PROTEGIDAS (exigem autenticacao) ---
       {
-        path: PATHS.ONBOARDING,
-        element: <OnboardingPage />,
-      },
-      {
-        path: PATHS.DASHBOARD,
-        element: <ProtectedRoute />,
+        element: <ProtectedRoute />, // wrapper para todas as rotas protegidas
         children: [
           {
-            path: "",
+            path: PATHS.ONBOARDING,
+            element: <OnboardingPage />,
+          },
+          {
+            path: PATHS.DASHBOARD,
             element: <DashboardPage />,
           },
         ],
+      },
+      {
+        path: "*",
+        element: <div>404 - Página Não Encontrada</div>,
       },
     ],
   },

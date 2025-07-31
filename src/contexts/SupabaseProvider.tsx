@@ -1,20 +1,15 @@
-import React, { type ReactNode } from "react";
-import {
-  SupabaseContext,
-  type SupabaseContextType,
-} from "@/contexts/SupabaseContext";
-
+// src/contexts/SupabaseProvider.tsx
+import React from "react";
+import { SupabaseContext } from "./SupabaseContext";
 import { supabase } from "@/api/supabase";
 
-export const SupabaseProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
-  const contextValue: SupabaseContextType = {
-    supabase,
-  };
+interface SupabaseProviderProps {
+  children: React.ReactNode;
+}
 
+export const SupabaseProvider = ({ children }: SupabaseProviderProps) => {
   return (
-    <SupabaseContext.Provider value={contextValue}>
+    <SupabaseContext.Provider value={supabase}>
       {children}
     </SupabaseContext.Provider>
   );

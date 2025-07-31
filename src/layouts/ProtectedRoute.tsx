@@ -1,20 +1,26 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom"; 
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PATHS } from "@/routes/path";
 
-export const ProtectedRoute = ({
-  requireOnboarding = true,
-}: {
-  requireOnboarding?: boolean;
-}) => {
-  const { user } = useAuth();
+export const ProtectedRoute = () => {
+  const { isLoaded, isSignedIn, hasCompletedPersonaQuiz } = useAuth();
+  const location = useLocation(); 
 
-  if (!user) {
-    return <Navigate to={PATHS.LOGIN} />;
+  if (!isLoaded) {
+    return <div>Carregando autenticação da rota protegida...</div>;
   }
 
-  if (requireOnboarding && !user.hasCompletedPersonaQuiz) {
-    return <Navigate to={PATHS.ONBOARDING} />;
+  // se nao estiver autenticado, sempre redirecione para o login
+  if (!isSignedIn) {
+    return <Navigate to={PATHS.LOGIN} replace />;
+  }
+
+  if (!hasCompletedPersonaQuiz && location.pathname !== PATHS.ONBOARDING) {
+    return <Navigate to={PATHS.ONBOARDING} replace />;
+  }
+
+  if (hasCompletedPersonaQuiz && location.pathname === PATHS.ONBOARDING) {
+    return <Navigate to={PATHS.DASHBOARD} replace />;
   }
 
   return <Outlet />;
