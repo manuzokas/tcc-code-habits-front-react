@@ -1,8 +1,7 @@
 import { MissionButton } from "@/features/gamification/components/MissionButton/index";
 import { useMissions } from "@/features/gamification/hooks/useMissions";
-// import { USER_PROGRESS } from "@/features/gamification/constants/userProgress"; // REMOVER
 import { Icon } from "@/shared/components/atoms/Icon";
-import { useGamification } from "@/features/gamification/hooks/useGamification"; // IMPORTAR o novo hook
+import { useGamification } from "@/features/gamification/hooks/useGamification";
 
 interface DashboardHeaderProps {
   sidebarOpen: boolean;
@@ -17,8 +16,13 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
     isLoadingGamification,
   } = useGamification();
 
-  const { missions, handleAdd, handleComplete, calculateTotalXp } =
-    useMissions();
+  const {
+    missions,
+    isLoadingMissions,
+    handleAdd,
+    handleComplete,
+    calculateTotalXp,
+  } = useMissions();
   const totalMissionsXp = calculateTotalXp();
 
   return (
@@ -36,7 +40,7 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
       shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]"
               >
                 <span className="text-2xl font-bold text-emerald-600 dark:text-green-300">
-                  {isLoadingGamification ? "-" : userLevel}{" "}
+                  {isLoadingGamification ? "-" : userLevel}
                 </span>
                 <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1 border-2 border-white dark:border-gray-800">
                   <Icon name="Star" className="w-3 h-3 text-white" />
@@ -62,7 +66,7 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300"
                       style={{
                         width: `${isLoadingGamification ? 0 : xpProgressPercentage}%`,
-                      }} 
+                      }}
                     />
                   </div>
                   <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded">
@@ -76,7 +80,9 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
                 <div className="flex justify-between">
                   <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
                     <span className="text-teal-500 dark:text-teal-400">
-                      {isLoadingGamification ? "..." : `${xpToNextLevel} XP`}{" "}
+                      {isLoadingGamification
+                        ? "..."
+                        : `${xpToNextLevel} XP`}{" "}
                     </span>{" "}
                     para próximo nível
                   </p>
@@ -91,7 +97,6 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
             </div>
           </div>
 
-          {/* section de missões */}
           <div className="flex-1 w-full min-w-0">
             <div className="flex justify-end mb-3">
               <h3 className="text-sm font-semibold text-yellow-300 bg-emerald-900/30 px-3 py-1 rounded-full inline-flex items-center gap-1 border border-yellow-400">
@@ -101,26 +106,32 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
             </div>
 
             <div className="flex flex-wrap gap-2 justify-end">
-              <MissionButton
-                mission={missions.water}
-                onAdd={() => handleAdd("water")}
-                onComplete={() => handleComplete("water")}
-              />
+              {isLoadingMissions ? (
+                <p className="text-gray-400">Carregando missões...</p>
+              ) : (
+                <>
+                  <MissionButton
+                    mission={missions.water}
+                    onAdd={() => handleAdd("water")}
+                    onComplete={() => handleComplete("water")}
+                  />
 
-              <MissionButton
-                mission={missions.stretch}
-                onAdd={() => handleAdd("stretch")}
-                onComplete={() => handleComplete("stretch")}
-              />
+                  <MissionButton
+                    mission={missions.stretch}
+                    onAdd={() => handleAdd("stretch")}
+                    onComplete={() => handleComplete("stretch")}
+                  />
 
-              <MissionButton
-                mission={missions.eyeRest}
-                onAdd={() => handleAdd("eyeRest")}
-                onComplete={() => handleComplete("eyeRest")}
-              />
+                  <MissionButton
+                    mission={missions.eyeRest}
+                    onAdd={() => handleAdd("eyeRest")}
+                    onComplete={() => handleComplete("eyeRest")}
+                  />
+                </>
+              )}
 
               <div className="flex items-center gap-2 bg-yellow-600/90 px-3 py-2 rounded-lg border border-gray-700">
-                <span className="text-sm text-gray-300">Total Missões:</span>{" "}
+                <span className="text-sm text-gray-300">Total Missões:</span>
                 <span className="text-sm font-mono text-yellow-400 font-bold">
                   {Math.round(totalMissionsXp)} XP
                 </span>
