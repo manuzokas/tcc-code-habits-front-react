@@ -13,12 +13,16 @@ import {
   Hourglass,
   CheckCircle,
   Code2,
+  Save,
 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type ChangeEvent } from "react";
+import { useTimerConfig } from "../../hooks/useTimerConfig";
 
 type SessionType = "focus" | "break";
 
 export function ProductivityTimer() {
+  const { config, isLoading, updateConfig } = useTimerConfig();
+
   const [isActive, setIsActive] = useState<boolean>(false);
   const [time, setTime] = useState<number>(0);
   const [showSettings, setShowSettings] = useState<boolean>(false);
@@ -27,21 +31,26 @@ export function ProductivityTimer() {
   const [healthTip, setHealthTip] = useState<string>("");
   const [completedSessions, setCompletedSessions] = useState<number>(0);
 
-  // Estado de 'settings' agora é dinâmico com setSettings
-  const [settings, setSettings] = useState({
-    focusDuration: 50 * 60,
-    breakDuration: 10 * 60,
-    enableHealthTips: true,
-    autoSwitch: true,
-    longBreakAfter: 4,
-  });
+  const [localSettings, setLocalSettings] = useState<{
+    focus_duration_minutes: number;
+    short_break_duration_minutes: number;
+    long_break_duration_minutes: number;
+    pomodoros_before_long_break: number;
+  } | null>(null);
 
   const switchSession = useCallback(() => {
-    const next: SessionType = sessionType === "focus" ? "break" : "focus";
-    setSessionType(next);
-    setTime(0);
-    setIsActive(settings.autoSwitch); // Inicia automaticamente se a opção estiver ligada
-  }, [sessionType, settings.autoSwitch]);
+    if (!config) return;
+
+    if (sessionType === "focus") {
+      setCompletedSessions((prev) => prev + 1);
+      setSessionType("break");
+      setTime(0);
+    } else {
+      setSessionType("focus");
+      setTime(0);
+    }
+    setIsActive(true);
+  }, [sessionType, config]);
 
   const getHealthTip = useCallback((): string => {
     const tips: Record<SessionType, string[]> = {
@@ -60,36 +69,58 @@ export function ProductivityTimer() {
         "Olhe para fora da tela por 20 segundos",
       ],
     };
-    return tips[sessionType][
-      Math.floor(Math.random() * tips[sessionType].length)
-    ];
+    return (
+      tips[sessionType]?.[
+        Math.floor(Math.random() * tips[sessionType].length)
+      ] || ""
+    );
   }, [sessionType]);
+
+  const handleReset = useCallback(() => {
+    if (!config) return;
+    setIsActive(false);
+    setSessionType("focus");
+    setTime(0);
+    setCompletedSessions(0);
+  }, [config]);
+
+  useEffect(() => {
+    if (config) {
+      setLocalSettings({
+        focus_duration_minutes: config.focus_duration_minutes,
+        short_break_duration_minutes: config.short_break_duration_minutes,
+        long_break_duration_minutes: config.long_break_duration_minutes,
+        pomodoros_before_long_break: config.pomodoros_before_long_break,
+      });
+      setTime(0);
+    }
+  }, [config]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined;
+    if (!config) return;
 
-    const currentDuration =
-      sessionType === "focus" ? settings.focusDuration : settings.breakDuration;
+    const currentDurationInSeconds =
+      sessionType === "focus"
+        ? config.focus_duration_minutes * 60
+        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+          ? config.long_break_duration_minutes * 60
+          : config.short_break_duration_minutes * 60;
 
-    if (isActive && time < currentDuration) {
+    if (isActive && time < currentDurationInSeconds) {
       interval = setInterval(() => {
         setTime((prev) => prev + 1);
       }, 1000);
-    } else if (isActive && time >= currentDuration) {
-      if (sessionType === "focus") {
-        setCompletedSessions((prev) => prev + 1);
-      }
-      if (settings.autoSwitch) {
-        switchSession();
-      } else {
-        setIsActive(false);
-      }
+    } else if (isActive && time >= currentDurationInSeconds) {
+      setIsActive(false);
+      switchSession();
     }
+
     return () => clearInterval(interval);
-  }, [isActive, time, sessionType, settings, switchSession]);
+  }, [isActive, time, sessionType, config, switchSession, completedSessions]);
 
   useEffect(() => {
-    if (!settings.enableHealthTips || isMiniMode) {
+    if (isMiniMode) {
       setHealthTip("");
       return;
     }
@@ -100,43 +131,76 @@ export function ProductivityTimer() {
     }, 30000);
 
     return () => clearInterval(tipInterval);
-  }, [sessionType, settings.enableHealthTips, getHealthTip, isMiniMode]);
+  }, [sessionType, getHealthTip, isMiniMode]);
+
+  if (isLoading || !config || !localSettings) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px] text-zinc-400">
+        <Hourglass size={32} className="animate-spin mr-2" />
+        Carregando configurações...
+      </div>
+    );
+  }
 
   const formatTime = (seconds: number): string => {
-    const currentDuration =
-      sessionType === "focus" ? settings.focusDuration : settings.breakDuration;
-    const remaining = currentDuration - seconds;
+    const currentDurationInSeconds =
+      sessionType === "focus"
+        ? config.focus_duration_minutes * 60
+        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+          ? config.long_break_duration_minutes * 60
+          : config.short_break_duration_minutes * 60;
+
+    const remaining = currentDurationInSeconds - seconds;
     return `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(
       remaining % 60
     ).padStart(2, "0")}`;
   };
 
   const progressPercentage = (): number => {
-    const currentDuration =
-      sessionType === "focus" ? settings.focusDuration : settings.breakDuration;
-    return (time / currentDuration) * 100;
+    const currentDurationInSeconds =
+      sessionType === "focus"
+        ? config.focus_duration_minutes * 60
+        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+          ? config.long_break_duration_minutes * 60
+          : config.short_break_duration_minutes * 60;
+    return (time / currentDurationInSeconds) * 100;
   };
 
-  const isLongBreak =
-    sessionType === "break" &&
-    completedSessions > 0 &&
-    completedSessions % settings.longBreakAfter === 0;
-
-  const toggleSession = () => {
-    const max =
-      sessionType === "focus" ? settings.focusDuration : settings.breakDuration;
-    if (time >= max && settings.autoSwitch) return switchSession();
+  const handleToggle = () => {
     setIsActive(!isActive);
   };
 
-  const resetTimer = () => {
-    setTime(0);
+  const handleSessionButtonClick = (type: SessionType) => {
     setIsActive(false);
+    setSessionType(type);
+    setTime(0);
   };
 
-  const handleSessionButtonClick = (type: SessionType) => {
-    setSessionType(type);
-    resetTimer();
+  const handleSettingsChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setLocalSettings((prev) => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        [name]: parseInt(value),
+      };
+    });
+  };
+
+  const handleSaveSettings = () => {
+    if (localSettings) {
+      updateConfig({
+        focus_duration_minutes: localSettings.focus_duration_minutes,
+        short_break_duration_minutes:
+          localSettings.short_break_duration_minutes,
+        long_break_duration_minutes:
+          localSettings.short_break_duration_minutes * 3,
+        pomodoros_before_long_break: localSettings.pomodoros_before_long_break,
+      });
+      setShowSettings(false);
+    }
   };
 
   return (
@@ -150,13 +214,7 @@ export function ProductivityTimer() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 text-md font-medium text-zinc-200">
           <Code2 size={16} className="text-green-400" />
-          <span>
-            {sessionType === "focus"
-              ? "Modo Dev: Foco"
-              : isLongBreak
-                ? "Pausa Longa"
-                : "Pausa Rápida"}
-          </span>
+          <span>{sessionType === "focus" ? "Modo Dev: Foco" : "Pausa"}</span>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -174,9 +232,9 @@ export function ProductivityTimer() {
         </div>
       </div>
 
-      {/* PAINEL DE CONFIGURAÇÕES RESTAURADO */}
+      {/* PAINEL DE CONFIGURAÇÕES */}
       <AnimatePresence>
-        {showSettings && (
+        {showSettings && localSettings && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -185,105 +243,67 @@ export function ProductivityTimer() {
           >
             <div className="bg-zinc-900/80 p-4 rounded-lg border border-zinc-800 space-y-4">
               <h3 className="font-semibold text-center text-zinc-200">
-                Configurações
+                Configurações do Timer
               </h3>
 
               <div>
                 <label className="block text-sm text-zinc-300 mb-1">
-                  Foco: {settings.focusDuration / 60}min
+                  Duração do Foco: {localSettings.focus_duration_minutes}min
                 </label>
                 <input
                   type="range"
+                  name="focus_duration_minutes"
                   min="5"
-                  max="90"
+                  max="120"
                   step="5"
-                  value={settings.focusDuration / 60}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      focusDuration: parseInt(e.target.value) * 60,
-                    })
-                  }
+                  value={localSettings.focus_duration_minutes}
+                  onChange={handleSettingsChange}
                   className="w-full h-1.5 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm text-zinc-300 mb-1">
-                  Pausa: {settings.breakDuration / 60}min
+                  Duração da Pausa: {localSettings.short_break_duration_minutes}
+                  min
                 </label>
                 <input
                   type="range"
+                  name="short_break_duration_minutes"
                   min="1"
                   max="30"
-                  value={settings.breakDuration / 60}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      breakDuration: parseInt(e.target.value) * 60,
-                    })
-                  }
+                  step="1"
+                  value={localSettings.short_break_duration_minutes}
+                  onChange={handleSettingsChange}
                   className="w-full h-1.5 bg-zinc-700 rounded-full appearance-none cursor-pointer accent-green-500"
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-2">
-                <label className="text-sm text-zinc-300">
-                  Troca automática
-                </label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.autoSwitch}
-                    onChange={(e) =>
-                      setSettings({ ...settings, autoSwitch: e.target.checked })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                </label>
-              </div>
-
               <div className="flex items-center justify-between">
                 <label className="text-sm text-zinc-300">
-                  Dicas de produtividade
-                </label>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={settings.enableHealthTips}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        enableHealthTips: e.target.checked,
-                      })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-zinc-700 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-500"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <label className="text-sm text-zinc-300">
-                  Pausa longa após
+                  Número de Sessões:
                 </label>
                 <select
-                  value={settings.longBreakAfter}
-                  onChange={(e) =>
-                    setSettings({
-                      ...settings,
-                      longBreakAfter: parseInt(e.target.value),
-                    })
-                  }
+                  name="pomodoros_before_long_break"
+                  value={localSettings.pomodoros_before_long_break}
+                  onChange={handleSettingsChange}
                   className="bg-zinc-800 text-zinc-200 text-sm rounded-md px-2 py-1 border border-zinc-700"
                 >
-                  {[2, 3, 4, 5, 6].map((n) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
                     <option key={n} value={n}>
                       {n} sessões
                     </option>
                   ))}
                 </select>
+              </div>
+
+              <div className="flex justify-center mt-4">
+                <button
+                  onClick={handleSaveSettings}
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2"
+                >
+                  <Save size={16} /> Salvar
+                </button>
               </div>
             </div>
           </motion.div>
@@ -336,7 +356,7 @@ export function ProductivityTimer() {
           <Zap size={16} /> Foco
         </button>
         <button
-          onClick={toggleSession}
+          onClick={handleToggle}
           className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors ${
             isActive ? "bg-red-700 text-white" : "bg-zinc-700 text-zinc-100"
           }`}
@@ -366,12 +386,13 @@ export function ProductivityTimer() {
           >
             <div className="flex justify-between text-sm text-zinc-400">
               <div className="flex items-center gap-1">
-                <Hourglass size={14} /> Sessões: {completedSessions}
+                <Hourglass size={14} /> Foco Completado: {completedSessions} de{" "}
+                {config.pomodoros_before_long_break}
               </div>
               <div className="flex items-center gap-1">
                 <CheckCircle size={14} />{" "}
                 {Math.floor(
-                  (completedSessions / settings.longBreakAfter) * 100
+                  (completedSessions / config.pomodoros_before_long_break) * 100
                 )}
                 %
               </div>
@@ -383,7 +404,7 @@ export function ProductivityTimer() {
             )}
             <div className="flex justify-center">
               <button
-                onClick={resetTimer}
+                onClick={handleReset}
                 className="text-xs text-zinc-200 bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded flex items-center gap-1"
               >
                 <RefreshCw size={14} /> Reiniciar
