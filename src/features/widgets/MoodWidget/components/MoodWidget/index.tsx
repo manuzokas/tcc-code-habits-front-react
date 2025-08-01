@@ -1,19 +1,14 @@
-import { useState } from "react";
 import { MoodIcon } from "../MoodIcon";
 import { MoodButton } from "../MoodButton";
 import { MOOD_OPTIONS, MOOD_WIDGET_VERSION } from "../../constants/mood";
 import type { MoodWidgetProps } from "../../types/mood";
+import { useMood } from "../../hooks/useMood";
 
-export const MoodWidget = ({
-  currentMood: initialMood,
-  onMoodSelect,
-  className = "",
-}: MoodWidgetProps) => {
-  const [currentMood, setCurrentMood] = useState(initialMood);
+export const MoodWidget = ({ className = "" }: MoodWidgetProps) => {
+  const { currentMood, isLoading, saveMood, clearMood } = useMood();
 
   const handleMoodSelect = (mood: string) => {
-    setCurrentMood(mood);
-    onMoodSelect?.(mood);
+    saveMood(mood);
   };
 
   return (
@@ -38,14 +33,18 @@ export const MoodWidget = ({
       </div>
 
       <div className="grid grid-cols-4 gap-2">
-        {MOOD_OPTIONS.map((mood, i) => (
-          <MoodButton
-            key={i}
-            {...mood}
-            isSelected={currentMood === mood.label}
-            onClick={() => handleMoodSelect(mood.label)}
-          />
-        ))}
+        {isLoading ? (
+          <p className="text-gray-400 col-span-4 text-center">Carregando...</p>
+        ) : (
+          MOOD_OPTIONS.map((mood, i) => (
+            <MoodButton
+              key={i}
+              {...mood}
+              isSelected={currentMood === mood.label}
+              onClick={() => handleMoodSelect(mood.label)}
+            />
+          ))
+        )}
       </div>
 
       <div className="mt-4 pt-4 border-t border-green-700 flex justify-between items-center">
@@ -54,7 +53,7 @@ export const MoodWidget = ({
         </span>
         <button
           className="text-xs text-green-300 hover:text-purple-100 flex items-center gap-1"
-          onClick={() => setCurrentMood(undefined)}
+          onClick={() => clearMood()}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

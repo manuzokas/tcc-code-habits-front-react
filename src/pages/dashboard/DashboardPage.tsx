@@ -3,7 +3,7 @@ import { useState } from "react";
 // import { useAuth } from "@/features/auth/hooks/useAuth";
 import { motion } from "framer-motion";
 // import { Icon } from "@/shared/components/atoms/Icon";
-import { ProductivityTimer } from "@/features/widgets/TimerWidget/components/TimerWidget"; 
+import { ProductivityTimer } from "@/features/widgets/TimerWidget/components/TimerWidget";
 import { MusicPlayer } from "@/features/widgets/MusicPlayerWidget/components/MusicPlayer/MusicPlayer";
 import { AchievementsSection } from "@/features/gamification/components/AchievementsSection";
 import { HealthMetricsSection } from "@/features/widgets/DevHealthMetricsWidget/components/HealthMetricsSection";
@@ -54,12 +54,7 @@ export function DashboardPage() {
             className="flex flex-col gap-6"
           >
             {/* Widget de Humor - Versão Dev */}
-            <MoodWidget
-              onMoodSelect={(mood) => {
-                // logica para salvar o humor selecionado
-                console.log("Humor selecionado:", mood);
-              }}
-            />
+            <MoodWidget />
 
             <section className="bg-gray-900 rounded-xl border border-green-400 p-5 shadow-lg shadow-green-500">
               <HealthMetricsSection />
