@@ -1,4 +1,3 @@
-// src/contexts/SupabaseProvider.tsx
 import React from "react";
 import { SupabaseContext } from "./SupabaseContext";
 import { supabase } from "@/api/supabase";

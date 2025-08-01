@@ -2,6 +2,9 @@ import { MissionButton } from "@/features/gamification/components/MissionButton/
 import { useMissions } from "@/features/gamification/hooks/useMissions";
 import { Icon } from "@/shared/components/atoms/Icon";
 import { useGamification } from "@/features/gamification/hooks/useGamification";
+import { useRecentActivities } from "@/features/widgets/RecentActivityWidget/hooks/useRecentActivities";
+import type { MissionKeyType } from "@/features/gamification/types/missions";
+import { useState } from "react";
 
 interface DashboardHeaderProps {
   sidebarOpen: boolean;
@@ -25,9 +28,39 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
   } = useMissions();
   const totalMissionsXp = calculateTotalXp();
 
+  const { refetch: refetchActivities } = useRecentActivities();
+  const [isCompletingMission, setIsCompletingMission] = useState<string | null>(
+    null
+  );
+
+  const handleMissionCompleteAndRefresh = async (
+    missionKey: MissionKeyType
+  ) => {
+    setIsCompletingMission(missionKey);
+
+    try {
+      // 1. Completar a missão no servidor
+      await handleComplete(missionKey);
+
+      // 2. Refetch para buscar os dados atualizados do banco de dados
+      // Esta chamada irá buscar as atividades recentes, incluindo a nova atividade
+      // criada pela trigger no banco de dados.
+      await refetchActivities();
+    } catch (error) {
+      console.error("Erro ao completar missão:", error);
+      // Em caso de erro, ainda recarregamos para garantir que o estado da UI
+      // não fique dessincronizado.
+      await refetchActivities();
+    } finally {
+      setIsCompletingMission(null);
+    }
+  };
+
   return (
     <header
-      className={`sticky top-0 z-30 bg-gray-950 backdrop-blur-md border-b border-emerald-500/30 shadow-lg shadow-emerald-600 transition-all duration-300 ${sidebarOpen ? "ml-64" : "ml-0"}`}
+      className={`sticky top-0 z-30 bg-gray-950 backdrop-blur-md border-b border-emerald-500/30 shadow-lg shadow-emerald-600 transition-all duration-300 ${
+        sidebarOpen ? "ml-64" : "ml-0"
+      }`}
     >
       <div className="container mx-auto px-9 py-7">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -65,7 +98,9 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
                     <div
                       className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300"
                       style={{
-                        width: `${isLoadingGamification ? 0 : xpProgressPercentage}%`,
+                        width: `${
+                          isLoadingGamification ? 0 : xpProgressPercentage
+                        }%`,
                       }}
                     />
                   </div>
@@ -113,19 +148,26 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
                   <MissionButton
                     mission={missions.water}
                     onAdd={() => handleAdd("water")}
-                    onComplete={() => handleComplete("water")}
+                    onComplete={() => handleMissionCompleteAndRefresh("water")}
+                    isLoading={isCompletingMission === "water"}
                   />
 
                   <MissionButton
                     mission={missions.stretch}
                     onAdd={() => handleAdd("stretch")}
-                    onComplete={() => handleComplete("stretch")}
+                    onComplete={() =>
+                      handleMissionCompleteAndRefresh("stretch")
+                    }
+                    isLoading={isCompletingMission === "stretch"}
                   />
 
                   <MissionButton
                     mission={missions.eyeRest}
                     onAdd={() => handleAdd("eyeRest")}
-                    onComplete={() => handleComplete("eyeRest")}
+                    onComplete={() =>
+                      handleMissionCompleteAndRefresh("eyeRest")
+                    }
+                    isLoading={isCompletingMission === "eyeRest"}
                   />
                 </>
               )}
