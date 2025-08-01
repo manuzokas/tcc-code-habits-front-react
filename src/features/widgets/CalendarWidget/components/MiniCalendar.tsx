@@ -1,12 +1,13 @@
-// @/shared/components/organisms/MiniCalendar.tsx
 import { useState } from "react";
 import { Icon } from "@/shared/components/atoms/Icon";
+import { useCalendarEvents } from "../hooks/useCalendarEvents";
 
 export const MiniCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
-  // Nomes dos meses e dias
+  const { events, isLoading } = useCalendarEvents(currentDate);
+
   const monthNames = [
     "Janeiro",
     "Fevereiro",
@@ -23,7 +24,6 @@ export const MiniCalendar = () => {
   ];
   const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-  // Obter o primeiro dia do mês e o número de dias no mês
   const firstDayOfMonth = new Date(
     currentDate.getFullYear(),
     currentDate.getMonth(),
@@ -36,16 +36,25 @@ export const MiniCalendar = () => {
     0
   ).getDate();
 
-  // Gerar array de dias do mês
+  const hasEvents = (day: number) => {
+    const dayDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+    return events.some((event) => {
+      const eventStartDate = new Date(event.start_time);
+      return eventStartDate.toDateString() === dayDate.toDateString();
+    });
+  };
+
   const renderDays = () => {
     const days = [];
 
-    // Dias vazios para começar no dia correto da semana
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
 
-    // Dias do mês
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(
         currentDate.getFullYear(),
@@ -56,17 +65,22 @@ export const MiniCalendar = () => {
       const isSelected =
         selectedDate && date.toDateString() === selectedDate.toDateString();
       const isToday = date.toDateString() === new Date().toDateString();
+      const hasEvent = hasEvents(day);
 
       days.push(
         <button
           key={`day-${day}`}
           onClick={() => setSelectedDate(date)}
-          className={`w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors
+          className={`relative w-8 h-8 rounded-full flex items-center justify-center text-sm transition-colors
             ${isSelected ? "bg-blue-500 text-white" : ""}
-            ${isToday && !isSelected ? "border border-blue-500 text-blue-500" : ""}
-            ${!isSelected && !isToday ? "hover:bg-gray-700" : ""}`}
+            ${isToday && !isSelected ? "border border-purple-500 text-purple-500" : ""}
+            ${!isSelected && !isToday ? "hover:bg-gray-700" : ""}
+          `}
         >
           {day}
+          {hasEvent && (
+            <span className="absolute bottom-1 right-1 w-1.5 h-1.5 bg-purple-500 rounded-full"></span>
+          )}
         </button>
       );
     }
@@ -74,7 +88,6 @@ export const MiniCalendar = () => {
     return days;
   };
 
-  // Navegar entre meses
   const prevMonth = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
@@ -89,7 +102,6 @@ export const MiniCalendar = () => {
 
   return (
     <div className="bg-gray-900 rounded-xl border border-purple-500/30 shadow-lg shadow-purple-500/20 w-full max-w-xs mx-auto p-4">
-      {/* Cabeçalho do calendário */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={prevMonth}
@@ -110,7 +122,6 @@ export const MiniCalendar = () => {
         </button>
       </div>
 
-      {/* Dias da semana */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {dayNames.map((day) => (
           <div
@@ -122,10 +133,16 @@ export const MiniCalendar = () => {
         ))}
       </div>
 
-      {/* Dias do mês */}
-      <div className="grid grid-cols-7 gap-1">{renderDays()}</div>
+      <div className="grid grid-cols-7 gap-1">
+        {isLoading ? (
+          <div className="col-span-7 text-center text-gray-400 text-sm py-4">
+            Loading...
+          </div>
+        ) : (
+          renderDays()
+        )}
+      </div>
 
-      {/* Data selecionada */}
       {selectedDate && (
         <div className="mt-4 pt-3 border-t border-gray-800 text-center">
           <p className="text-sm text-gray-400">Selecionado:</p>
