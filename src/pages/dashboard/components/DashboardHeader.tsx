@@ -39,17 +39,10 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
     setIsCompletingMission(missionKey);
 
     try {
-      // 1. Completar a missão no servidor
       await handleComplete(missionKey);
-
-      // 2. Refetch para buscar os dados atualizados do banco de dados
-      // Esta chamada irá buscar as atividades recentes, incluindo a nova atividade
-      // criada pela trigger no banco de dados.
       await refetchActivities();
     } catch (error) {
       console.error("Erro ao completar missão:", error);
-      // Em caso de erro, ainda recarregamos para garantir que o estado da UI
-      // não fique dessincronizado.
       await refetchActivities();
     } finally {
       setIsCompletingMission(null);

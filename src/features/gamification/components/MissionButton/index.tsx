@@ -16,8 +16,10 @@ export const MissionButton = ({
   isLoading = false,
 }: MissionButtonProps) => {
   const colors = COLORS[mission.color];
-  const progressPercentage = (mission.current / mission.total) * 100;
-  const isCompleted = mission.isCompleted;
+const progressPercentage = Math.min(
+  (mission.current / mission.total) * 100,
+  100
+);  const isCompleted = mission.isCompleted;
 
   return (
     <div className="group relative">
