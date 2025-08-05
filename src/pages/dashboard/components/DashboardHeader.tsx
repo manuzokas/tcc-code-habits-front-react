@@ -137,32 +137,17 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
               {isLoadingMissions ? (
                 <p className="text-gray-400">Carregando missões...</p>
               ) : (
-                <>
+                Object.entries(missions).map(([key, mission]) => (
                   <MissionButton
-                    mission={missions.water}
-                    onAdd={() => handleAdd("water")}
-                    onComplete={() => handleMissionCompleteAndRefresh("water")}
-                    isLoading={isCompletingMission === "water"}
-                  />
-
-                  <MissionButton
-                    mission={missions.stretch}
-                    onAdd={() => handleAdd("stretch")}
+                    key={key}
+                    mission={mission}
+                    onAdd={() => handleAdd(key as MissionKeyType)}
                     onComplete={() =>
-                      handleMissionCompleteAndRefresh("stretch")
+                      handleMissionCompleteAndRefresh(key as MissionKeyType)
                     }
-                    isLoading={isCompletingMission === "stretch"}
+                    isLoading={isCompletingMission === key}
                   />
-
-                  <MissionButton
-                    mission={missions.eyeRest}
-                    onAdd={() => handleAdd("eyeRest")}
-                    onComplete={() =>
-                      handleMissionCompleteAndRefresh("eyeRest")
-                    }
-                    isLoading={isCompletingMission === "eyeRest"}
-                  />
-                </>
+                ))
               )}
 
               <div className="flex items-center gap-2 bg-yellow-600/90 px-3 py-2 rounded-lg border border-gray-700">

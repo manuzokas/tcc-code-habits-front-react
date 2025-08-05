@@ -2,7 +2,7 @@ import type { IconName } from "../../../shared/components/atoms/Icon";
 import type { COLORS } from "../constants/missions";
 
 export type MissionColor = keyof typeof COLORS;
-export type MissionKeyType = "water" | "stretch" | "eyeRest";
+export type MissionKeyType = "water" | "stretch" | "eyeRest" | "breathBreak" | "sleep" | "walk";
 
 // type para o template de missao (meus dados estaticos)
 export type MissionTemplate = {
