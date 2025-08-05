@@ -15,8 +15,9 @@ import PreCodeSetupCheck from "@/features/widgets/PreCodeSetupWidget/components/
 import SmartAlarms from "@/features/widgets/AlarmsWidget/components/SmartAlarms";
 import { DashboardHeader } from "@/pages/dashboard/components/DashboardHeader";
 import { MoodWidget } from "@/features/widgets/MoodWidget/components/MoodWidget";
-import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
-
+import { MiniCalendar
+  
+ } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
 export function DashboardPage() {
   // const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
