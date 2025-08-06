@@ -1,14 +1,10 @@
-// Redesigned DevHealth Dashboard with Sidebar
 import { useState } from "react";
-// import { useAuth } from "@/features/auth/hooks/useAuth";
 import { motion } from "framer-motion";
-// import { Icon } from "@/shared/components/atoms/Icon";
+import { MusicPlayerSection } from "@/features/widgets/MusicPlayerWidget/components/MusicPlayerSection";
 import { ProductivityTimer } from "@/features/widgets/TimerWidget/components/TimerWidget";
-import { MusicPlayer } from "@/features/widgets/MusicPlayerWidget/components/MusicPlayer/MusicPlayer";
 import { AchievementsSection } from "@/features/gamification/components/AchievementsSection";
 import { HealthMetricsSection } from "@/features/widgets/DevHealthMetricsWidget/components/HealthMetricsSection";
 import { RecentActivitiesSection } from "@/features/widgets/RecentActivityWidget/components/ActivitiesSection";
-// import { HealthTipsSection } from "@/shared/components/organisms/HealthDashboard/HealthTipsSection";
 import { Sidebar } from "@/shared/components/organisms/sidebar/Sidebar";
 import { SidebarToggle } from "@/shared/components/atoms/SidebarToggle";
 import PreCodeSetupCheck from "@/features/widgets/PreCodeSetupWidget/components/PreCodeSetupCheck";
@@ -85,11 +81,7 @@ export function DashboardPage() {
             className="flex flex-col gap-6"
           >
             {/* section do player de musica */}
-            <section className="bg-white/5 rounded-xl w-fit mx-auto justify-center border border-white/10 p-5 shadow-lg shadow-green-400">
-              <div className="w-fit rounded-xl shadow-lg shadow-blue-500">
-                <MusicPlayer />
-              </div>
-            </section>
+            <MusicPlayerSection />
 
             {/* section das atividades recentes */}
             <section className="bg-black/50 rounded-xl border border-green-500 p-5 shadow-lg">

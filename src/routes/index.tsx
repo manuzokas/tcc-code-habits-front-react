@@ -27,6 +27,10 @@ export const router = createBrowserRouter([
         path: PATHS.REGISTER,
         element: <RegisterPage />,
       },
+      {
+        path: PATHS.SPOTIFY_CALLBACK,
+        element: <DashboardPage />,
+      },
       // --- rotas PROTEGIDAS (exigem autenticacao) ---
       {
         element: <ProtectedRoute />, // wrapper para todas as rotas protegidas
