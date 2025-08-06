@@ -90,8 +90,8 @@ export const MusicPlayerSection = () => {
       localStorage.setItem("spotify_token_expires_at", expiresAt.toString());
 
       navigate(PATHS.DASHBOARD, { replace: true });
+      window.location.reload();
     } else {
-      // Recupera do localStorage
       const storedAccessToken = localStorage.getItem("spotify_access_token");
       const storedRefreshToken = localStorage.getItem("spotify_refresh_token");
       const storedExpiresAt = localStorage.getItem("spotify_token_expires_at");

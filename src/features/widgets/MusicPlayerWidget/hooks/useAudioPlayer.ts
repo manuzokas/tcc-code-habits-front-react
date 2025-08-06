@@ -100,21 +100,6 @@ export const useAudioPlayer = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!audioRef.current) return;
-
-    setCurrentTime(0);
-    if (isPlaying) {
-      setIsPlaying(false);
-
-      const timer = setTimeout(() => {
-        setIsPlaying(true);
-      }, 100);
-
-      return () => clearTimeout(timer);
-    }
-  }, [currentTrack, isPlaying]);
-
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
   };

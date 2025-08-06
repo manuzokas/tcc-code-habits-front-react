@@ -87,7 +87,11 @@ export const MusicPlayer = ({
     return () => {
       isMounted = false;
     };
-  }, [spotifyPlayer.isAuthenticated, spotifyPlayer.deviceId, hasFetchedTracks]);
+  }, [
+    spotifyPlayer.isAuthenticated,
+    spotifyPlayer.deviceId,
+    hasFetchedTracks,
+  ]); 
 
   const currentTrack: Track | null =
     mode === "local"
