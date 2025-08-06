@@ -40,41 +40,55 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
   const spotifyPlayer = useSpotifyPlayer(spotifyAccessToken);
 
   useEffect(() => {
-    if (
-      spotifyPlayer.isAuthenticated &&
-      spotifyPlayer.deviceId &&
-      !hasFetchedTracks
-    ) {
-      setMode("spotify");
-      spotifyPlayer.getUsersTopTracks().then((tracks: SpotifyApiTrack[]) => {
-        const convertedTracks: Track[] = tracks.map(
-          (track: SpotifyApiTrack) => ({
-            id: track.id,
-            title: track.title,
-            artist: track.artist,
-            cover: track.cover,
-            src: undefined,
-            spotifyId: track.id,
-            spotifyUri: track.uri,
-            duration: `${Math.floor(track.duration / 60)}:${String(
-              track.duration % 60
-            ).padStart(2, "0")}`,
-          })
-        );
-        setSpotifyTracks(convertedTracks);
-        setHasFetchedTracks(true);
-      });
-    } else if (!spotifyPlayer.isAuthenticated) {
-      setMode("local");
-      setHasFetchedTracks(false);
-      setSpotifyTracks([]);
-    }
+    let isMounted = true;
+
+    const fetchTracks = async () => {
+      if (
+        spotifyPlayer.isAuthenticated &&
+        spotifyPlayer.deviceId &&
+        !hasFetchedTracks
+      ) {
+        setMode("spotify");
+
+        try {
+          const tracks = await spotifyPlayer.getUsersTopTracks();
+          if (isMounted) {
+            const convertedTracks = tracks.map((track: SpotifyApiTrack) => ({
+              id: track.id,
+              title: track.title,
+              artist: track.artist,
+              cover: track.cover,
+              src: undefined,
+              spotifyId: track.id,
+              spotifyUri: track.uri,
+              duration: `${Math.floor(track.duration / 60)}:${String(
+                track.duration % 60
+              ).padStart(2, "0")}`,
+            }));
+            setSpotifyTracks(convertedTracks);
+            setHasFetchedTracks(true);
+          }
+        } catch (error) {
+          console.error("Erro ao buscar top tracks:", error);
+        }
+      } else if (!spotifyPlayer.isAuthenticated) {
+        setMode("local");
+        setHasFetchedTracks(false);
+        setSpotifyTracks([]);
+      }
+    };
+
+    fetchTracks();
+
+    return () => {
+      isMounted = false;
+    };
   }, [
     spotifyPlayer.isAuthenticated,
     spotifyPlayer.deviceId,
     hasFetchedTracks,
-    spotifyPlayer,
   ]);
+
 
   const currentTrack: Track | null =
     mode === "local"
@@ -163,12 +177,8 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
       className={`relative flex flex-col bg-gradient-to-br from-green-950 to-blue-700/80 rounded-2xl overflow-hidden transition-all duration-300 ${
         isMiniMode ? "w-72" : "w-[300px]"
       } shadow-2xl border border-green-700`}
-      className={`relative flex flex-col bg-gradient-to-br from-green-950 to-blue-700/80 rounded-2xl overflow-hidden transition-all duration-300 ${
-        isMiniMode ? "w-72" : "w-[300px]"
-      } shadow-2xl border border-green-700`}
     >
       <div className="absolute inset-0 backdrop-blur-sm bg-white/5" />
-      <div className="relative z-10 flex flex-col">
       <div className="relative z-10 flex flex-col">
         <div className="p-4 flex justify-between items-center border-b border-gray-800/50">
           <div className="flex items-center gap-2">
@@ -184,7 +194,6 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
               </span>
             </div>
           </div>
-          <div className="flex gap-2 ">
           <div className="flex gap-2 ">
             <button
               onClick={togglePlaylist}
@@ -204,13 +213,6 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
             >
               {isMiniMode ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
             </button>
-            <button
-              onClick={toggleMiniMode}
-              className="p-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/80 text-gray-300 hover:text-white transition-colors"
-              aria-label={isMiniMode ? "Expandir" : "Minimizar"}
-            >
-              {isMiniMode ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
-            </button>
           </div>
         </div>
 
@@ -222,7 +224,6 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
         />
 
         <AnimatePresence>
-          {!isMiniMode && !showPlaylist && (
           {!isMiniMode && !showPlaylist && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
@@ -262,7 +263,6 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
         </AnimatePresence>
 
         <AnimatePresence>
-          {isMiniMode && !showPlaylist && (
           {isMiniMode && !showPlaylist && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}

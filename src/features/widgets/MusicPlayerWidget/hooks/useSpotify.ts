@@ -124,7 +124,7 @@ export const useSpotifyPlayer = (accessToken: string | null) => {
         playerRef.current.disconnect();
       }
     };
-  }, [accessToken, volume]);
+  }, [accessToken]);
 
   const playTrack = async (trackUri: string) => {
     if (!accessToken || !deviceId) {
