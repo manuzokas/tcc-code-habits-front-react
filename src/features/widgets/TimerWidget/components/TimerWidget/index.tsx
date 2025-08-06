@@ -63,7 +63,7 @@ export function ProductivityTimer() {
       ],
       break: [
         "Faça alongamentos de punho e ombro",
-        "Caminhe por 3 minutos para estimular o cérebro",
+        "Caminhe por 3 minutos",
         "Beba água e respire fundo",
         "Feche os olhos e relaxe a mandíbula",
         "Olhe para fora da tela por 20 segundos",

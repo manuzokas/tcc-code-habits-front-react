@@ -78,7 +78,7 @@ export function DashboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-7"
           >
             {/* section do player de musica */}
             <MusicPlayerSection />
