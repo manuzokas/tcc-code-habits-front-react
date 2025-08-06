@@ -1,30 +1,32 @@
+// src/components/SpotifyAuth.tsx
 import React from "react";
+import { SpotifyLogoIcon } from "@phosphor-icons/react";
 
 interface SpotifyAuthProps {
   spotifyAccessToken: string | null;
+  onLogin: () => void;
+  className?: string;
 }
 
 export const SpotifyAuth: React.FC<SpotifyAuthProps> = ({
   spotifyAccessToken,
+  onLogin,
+  className,
 }) => {
-  const handleLogin = () => {
-    window.location.href = "http://localhost:4000/login";
-  };
-
   return (
-    <div className="absolute top-4 right-4 z-20">
+    <div className={className}>
       {spotifyAccessToken ? (
-        <div className="flex items-center gap-2 bg-green-600/20 text-green-400 px-3 py-1 rounded-full text-xs border border-green-600/30">
-          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-          Spotify Conectado
+        <div className="flex items-center justify-center gap-2 p-1 text-green-400">
+          <SpotifyLogoIcon size={18} weight="fill" className="text-green-500" />
+          <span className="text-xs font-semibold">Spotify Conectado</span>
         </div>
       ) : (
         <button
-          onClick={handleLogin}
-          className="bg-gray-800/70 hover:bg-gray-700/90 text-gray-300 hover:text-white px-3 py-1 rounded-full text-xs border border-gray-700 transition-colors flex items-center gap-2"
+          onClick={onLogin}
+          className="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-800/70 hover:bg-gray-700/90 text-white transition-colors"
         >
-          <span className="w-2 h-2 rounded-full bg-green-500"></span>
-          Conectar Spotify
+          <SpotifyLogoIcon size={16} className="text-green-500" />
+          <span className="text-xs font-semibold">Conectar Spotify</span>
         </button>
       )}
     </div>

@@ -11,9 +11,7 @@ import PreCodeSetupCheck from "@/features/widgets/PreCodeSetupWidget/components/
 import SmartAlarms from "@/features/widgets/AlarmsWidget/components/SmartAlarms";
 import { DashboardHeader } from "@/pages/dashboard/components/DashboardHeader";
 import { MoodWidget } from "@/features/widgets/MoodWidget/components/MoodWidget";
-import { MiniCalendar
-  
- } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
+import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
 export function DashboardPage() {
   // const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,7 +76,7 @@ export function DashboardPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-col gap-6"
+            className="flex flex-col gap-7"
           >
             {/* section do player de musica */}
             <MusicPlayerSection />

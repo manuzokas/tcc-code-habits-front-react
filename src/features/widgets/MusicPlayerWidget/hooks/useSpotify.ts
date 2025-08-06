@@ -30,6 +30,8 @@ interface SpotifyTopTrackItem {
   uri: string;
 }
 
+const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export const useSpotifyPlayer = (accessToken: string | null) => {
   const [player, setPlayer] = useState<Spotify.Player | null>(null);
   const [currentTrack, setCurrentTrack] = useState<SpotifyTrack | null>(null);
@@ -37,6 +39,14 @@ export const useSpotifyPlayer = (accessToken: string | null) => {
   const [volume, setVolume] = useState(50);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const [cachedTopTracks, setCachedTopTracks] = useState<{
+    data: SpotifyTrack[];
+    timestamp: number;
+  }>({
+    data: [],
+    timestamp: 0,
+  });
 
   const playerRef = useRef<Spotify.Player | null>(null);
 
@@ -142,32 +152,87 @@ export const useSpotifyPlayer = (accessToken: string | null) => {
     }
   };
 
-  const getUsersTopTracks = async () => {
+  const getUsersTopTracks = async (): Promise<SpotifyTrack[]> => {
     if (!accessToken) return [];
 
-    try {
-      const response = await fetch("https://api.spotify.com/v1/me/top/tracks", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error("Não foi possível buscar as top tracks.");
-      }
-      const data = await response.json();
-      return data.items.map((item: SpotifyTopTrackItem) => ({
-        id: item.id,
-        title: item.name,
-        artist: item.artists.map((a) => a.name).join(", "),
-        album: item.album.name,
-        cover: item.album.images[0]?.url || "",
-        uri: item.uri,
-      }));
-    } catch (err) {
-      console.error(err);
-      setError("Falha ao carregar as top tracks do Spotify.");
-      return [];
+    const currentTime = Date.now();
+    const cacheDuration = 15 * 60 * 1000;
+
+    if (
+      cachedTopTracks.data.length > 0 &&
+      currentTime - cachedTopTracks.timestamp < cacheDuration
+    ) {
+      console.log("Usando dados em cache para as top tracks.");
+      return cachedTopTracks.data;
     }
+
+    let retries = 0;
+    const maxRetries = 5;
+    const initialDelay = 1000;
+
+    while (retries <= maxRetries) {
+      try {
+        const response = await fetch(
+          "https://api.spotify.com/v1/me/top/tracks?limit=5",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (response.status === 429) {
+          const retryAfter = response.headers.get("Retry-After");
+          const waitTime = retryAfter
+            ? parseInt(retryAfter, 10) * 1000
+            : initialDelay * 2 ** retries;
+
+          console.warn(
+            `Limite de taxa atingido. Tentando novamente em ${waitTime / 1000}s...`
+          );
+
+          await delay(waitTime);
+          retries++;
+          continue;
+        }
+
+        if (!response.ok) {
+          throw new Error(`Erro na API: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        const tracks = data.items.map((item: SpotifyTopTrackItem) => ({
+          id: item.id,
+          title: item.name,
+          artist: item.artists.map((a) => a.name).join(", "),
+          album: item.album.name,
+          cover: item.album.images[0]?.url || "",
+          uri: item.uri,
+        }));
+
+        setCachedTopTracks({
+          data: tracks,
+          timestamp: currentTime,
+        });
+
+        return tracks;
+      } catch (err) {
+        console.error("Erro ao buscar top tracks:", err);
+        if (retries === maxRetries) {
+          setError(
+            "Falha ao carregar as top tracks do Spotify após várias tentativas."
+          );
+          return [];
+        }
+        const backoffTime = initialDelay * 2 ** retries;
+        await delay(backoffTime);
+        retries++;
+      }
+    }
+
+    setError("Falha inesperada ao carregar as top tracks.");
+    return [];
   };
 
   const togglePlay = async () => {

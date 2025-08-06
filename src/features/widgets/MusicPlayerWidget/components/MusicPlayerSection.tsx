@@ -1,8 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MusicPlayer } from "./"; 
-import { PATHS } from "@/routes/path"; 
+import { MusicPlayer } from "./";
+import { PATHS } from "@/routes/path";
 
 export const MusicPlayerSection = () => {
   const location = useLocation();
@@ -99,7 +99,7 @@ export const MusicPlayerSection = () => {
     }
 
     if (spotifyRefreshToken && tokenExpiresAt) {
-      const timeToRefresh = tokenExpiresAt - Date.now() - 5 * 60 * 1000; // 5 minutos antes
+      const timeToRefresh = tokenExpiresAt - Date.now() - 5 * 60 * 1000;
 
       if (timeToRefresh > 0) {
         console.log(
@@ -128,11 +128,10 @@ export const MusicPlayerSection = () => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       viewport={{ once: true }}
-      className="bg-none p-10"
+      className="bg-none py-0 mx-auto"
     >
       <div className="relative flex items-center">
-        <div className="absolute -inset-1 bg-gradient-to-r from-green-600 to-blue-600 rounded-xl blur opacity-20"></div>
-        <div className="relative shadow-xl shadow-green-300/70 bg-green-800/20 rounded-xl p-3 border border-gray-700">
+        <div className="relative shadow-xl shadow-green-400/60 bg-green-800/20 rounded-xl p-3 border border-gray-700">
           <MusicPlayer spotifyAccessToken={spotifyAccessToken} />
         </div>
       </div>

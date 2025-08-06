@@ -32,6 +32,7 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
   const [isMiniMode, setIsMiniMode] = useState(false);
   const [isHoveringProgress, setIsHoveringProgress] = useState(false);
   const [spotifyTracks, setSpotifyTracks] = useState<Track[]>([]);
+  const [hasFetchedTracks, setHasFetchedTracks] = useState(false);
 
   const localPlayer = useAudioPlayer();
   const localAudioRef = localPlayer.audioRef;
@@ -39,7 +40,11 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
   const spotifyPlayer = useSpotifyPlayer(spotifyAccessToken);
 
   useEffect(() => {
-    if (spotifyPlayer.isAuthenticated && spotifyPlayer.deviceId) {
+    if (
+      spotifyPlayer.isAuthenticated &&
+      spotifyPlayer.deviceId &&
+      !hasFetchedTracks
+    ) {
       setMode("spotify");
       spotifyPlayer.getUsersTopTracks().then((tracks: SpotifyApiTrack[]) => {
         const convertedTracks: Track[] = tracks.map(
@@ -57,11 +62,19 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
           })
         );
         setSpotifyTracks(convertedTracks);
+        setHasFetchedTracks(true);
       });
-    } else {
+    } else if (!spotifyPlayer.isAuthenticated) {
       setMode("local");
+      setHasFetchedTracks(false);
+      setSpotifyTracks([]);
     }
-  }, [spotifyPlayer, spotifyPlayer.isAuthenticated, spotifyPlayer.deviceId]);
+  }, [
+    spotifyPlayer.isAuthenticated,
+    spotifyPlayer.deviceId,
+    hasFetchedTracks,
+    spotifyPlayer,
+  ]);
 
   const currentTrack: Track | null =
     mode === "local"
@@ -147,12 +160,12 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
 
   return (
     <div
-      className={`relative bg-gradient-to-br from-green-950 to-blue-800/70 rounded-2xl overflow-hidden transition-all duration-300 ${
-        isMiniMode ? "w-72" : "w-fit"
-      } shadow-2xl border border-blue-900`}
+      className={`relative flex flex-col bg-gradient-to-br from-green-950 to-blue-700/80 rounded-2xl overflow-hidden transition-all duration-300 ${
+        isMiniMode ? "w-72" : "w-[300px]"
+      } shadow-2xl border border-green-700`}
     >
       <div className="absolute inset-0 backdrop-blur-sm bg-white/5" />
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col">
         <div className="p-4 flex justify-between items-center border-b border-gray-800/50">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 text-white">
@@ -167,15 +180,7 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
               </span>
             </div>
           </div>
-
-          <div className="flex gap-2">
-            <button
-              onClick={toggleMiniMode}
-              className="p-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/80 text-gray-300 hover:text-white transition-colors"
-              aria-label={isMiniMode ? "Expandir" : "Minimizar"}
-            >
-              {isMiniMode ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
-            </button>
+          <div className="flex gap-2 ">
             <button
               onClick={togglePlaylist}
               className={`p-1.5 rounded-full transition-colors ${
@@ -187,13 +192,25 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
             >
               <ListMusic size={16} />
             </button>
+            <button
+              onClick={toggleMiniMode}
+              className="p-1.5 rounded-full bg-gray-800/50 hover:bg-gray-700/80 text-gray-300 hover:text-white transition-colors"
+              aria-label={isMiniMode ? "Expandir" : "Minimizar"}
+            >
+              {isMiniMode ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+            </button>
           </div>
         </div>
 
-        <SpotifyAuth spotifyAccessToken={spotifyAccessToken} />
+        <SpotifyAuth
+          spotifyAccessToken={spotifyAccessToken}
+          onLogin={() => {
+            window.location.href = "http://localhost:4000/login";
+          }}
+        />
 
         <AnimatePresence>
-          {!isMiniMode && (
+          {!isMiniMode && !showPlaylist && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -232,7 +249,7 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
         </AnimatePresence>
 
         <AnimatePresence>
-          {isMiniMode && (
+          {isMiniMode && !showPlaylist && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
