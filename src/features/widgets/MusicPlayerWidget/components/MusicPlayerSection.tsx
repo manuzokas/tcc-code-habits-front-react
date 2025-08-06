@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { MusicPlayer } from "./";
@@ -7,6 +7,7 @@ import { PATHS } from "@/routes/path";
 export const MusicPlayerSection = () => {
   const location = useLocation();
   const navigate = useNavigate();
+
   const [spotifyAccessToken, setSpotifyAccessToken] = useState<string | null>(
     null
   );
@@ -17,45 +18,60 @@ export const MusicPlayerSection = () => {
 
   const refreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  const refreshSpotifyToken = async (currentRefreshToken: string) => {
-    try {
-      const response = await fetch("http://localhost:4000/refresh_token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refresh_token: currentRefreshToken }),
-      });
+  const refreshSpotifyToken = useCallback(
+    async (currentRefreshToken: string) => {
+      try {
+        const response = await fetch("http://localhost:4000/refresh_token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refresh_token: currentRefreshToken }),
+        });
 
-      if (!response.ok) {
-        throw new Error("Falha ao refrescar o token");
+        if (!response.ok) {
+          throw new Error("Falha ao refrescar o token");
+        }
+
+        const data = await response.json();
+        const { access_token, refresh_token, expires_in } = data;
+
+        setSpotifyAccessToken(access_token);
+        setSpotifyRefreshToken(refresh_token);
+        setTokenExpiresAt(Date.now() + expires_in * 1000);
+
+        localStorage.setItem("spotify_access_token", access_token);
+        localStorage.setItem("spotify_refresh_token", refresh_token);
+        localStorage.setItem(
+          "spotify_token_expires_at",
+          (Date.now() + expires_in * 1000).toString()
+        );
+
+        console.log("Token do Spotify refrescado com sucesso!");
+      } catch (error) {
+        console.error("Erro ao refrescar o token:", error);
+        setSpotifyAccessToken(null);
+        setSpotifyRefreshToken(null);
+        setTokenExpiresAt(null);
+        localStorage.removeItem("spotify_access_token");
+        localStorage.removeItem("spotify_refresh_token");
+        localStorage.removeItem("spotify_token_expires_at");
       }
+    },
+    []
+  );
 
-      const data = await response.json();
-      const { access_token, refresh_token, expires_in } = data;
+  const handleLogout = useCallback(() => {
+    setSpotifyAccessToken(null);
+    setSpotifyRefreshToken(null);
+    setTokenExpiresAt(null);
+    localStorage.removeItem("spotify_access_token");
+    localStorage.removeItem("spotify_refresh_token");
+    localStorage.removeItem("spotify_token_expires_at");
 
-      setSpotifyAccessToken(access_token);
-      setSpotifyRefreshToken(refresh_token);
-      setTokenExpiresAt(Date.now() + expires_in * 1000);
-
-      localStorage.setItem("spotify_access_token", access_token);
-      localStorage.setItem("spotify_refresh_token", refresh_token);
-      localStorage.setItem(
-        "spotify_token_expires_at",
-        (Date.now() + expires_in * 1000).toString()
-      );
-
-      console.log("Token do Spotify refrescado com sucesso!");
-    } catch (error) {
-      console.error("Erro ao refrescar o token:", error);
-      setSpotifyAccessToken(null);
-      setSpotifyRefreshToken(null);
-      setTokenExpiresAt(null);
-      localStorage.removeItem("spotify_access_token");
-      localStorage.removeItem("spotify_refresh_token");
-      localStorage.removeItem("spotify_token_expires_at");
+    if (refreshIntervalRef.current) {
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
     }
-  };
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -75,6 +91,7 @@ export const MusicPlayerSection = () => {
 
       navigate(PATHS.DASHBOARD, { replace: true });
     } else {
+      // Recupera do localStorage
       const storedAccessToken = localStorage.getItem("spotify_access_token");
       const storedRefreshToken = localStorage.getItem("spotify_refresh_token");
       const storedExpiresAt = localStorage.getItem("spotify_token_expires_at");
@@ -91,11 +108,12 @@ export const MusicPlayerSection = () => {
         }
       }
     }
-  }, [location.search, navigate]);
+  }, [location.search, navigate, refreshSpotifyToken]);
 
   useEffect(() => {
     if (refreshIntervalRef.current) {
       clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
     }
 
     if (spotifyRefreshToken && tokenExpiresAt) {
@@ -105,7 +123,7 @@ export const MusicPlayerSection = () => {
         console.log(
           `Próximo refresh em ${Math.floor(timeToRefresh / 1000 / 60)} minutos.`
         );
-        refreshIntervalRef.current = setInterval(() => {
+        refreshIntervalRef.current = setTimeout(() => {
           console.log("Executando refresh automático do token...");
           refreshSpotifyToken(spotifyRefreshToken);
         }, timeToRefresh);
@@ -117,10 +135,11 @@ export const MusicPlayerSection = () => {
 
     return () => {
       if (refreshIntervalRef.current) {
-        clearInterval(refreshIntervalRef.current);
+        clearTimeout(refreshIntervalRef.current);
+        refreshIntervalRef.current = null;
       }
     };
-  }, [spotifyRefreshToken, tokenExpiresAt]);
+  }, [spotifyRefreshToken, tokenExpiresAt, refreshSpotifyToken]);
 
   return (
     <motion.div
@@ -132,7 +151,10 @@ export const MusicPlayerSection = () => {
     >
       <div className="relative flex items-center">
         <div className="relative shadow-xl shadow-green-400/60 bg-green-800/20 rounded-xl p-3 border border-gray-700">
-          <MusicPlayer spotifyAccessToken={spotifyAccessToken} />
+          <MusicPlayer
+            spotifyAccessToken={spotifyAccessToken}
+            onLogout={handleLogout}
+          />
         </div>
       </div>
     </motion.div>

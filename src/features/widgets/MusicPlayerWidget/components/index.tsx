@@ -24,9 +24,13 @@ import type { Track, PlayerMode } from "../types/playerTypes";
 
 interface MusicPlayerProps {
   spotifyAccessToken: string | null;
+  onLogout: () => void;
 }
 
-export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
+export const MusicPlayer = ({
+  spotifyAccessToken,
+  onLogout,
+}: MusicPlayerProps) => {
   const [mode, setMode] = useState<PlayerMode>("local");
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [isMiniMode, setIsMiniMode] = useState(false);
@@ -83,12 +87,7 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
     return () => {
       isMounted = false;
     };
-  }, [
-    spotifyPlayer.isAuthenticated,
-    spotifyPlayer.deviceId,
-    hasFetchedTracks,
-  ]);
-
+  }, [spotifyPlayer.isAuthenticated, spotifyPlayer.deviceId, hasFetchedTracks]);
 
   const currentTrack: Track | null =
     mode === "local"
@@ -221,6 +220,7 @@ export const MusicPlayer = ({ spotifyAccessToken }: MusicPlayerProps) => {
           onLogin={() => {
             window.location.href = "http://localhost:4000/login";
           }}
+          onLogout={onLogout}
         />
 
         <AnimatePresence>
