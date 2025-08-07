@@ -12,6 +12,8 @@ import SmartAlarms from "@/features/widgets/AlarmsWidget/components/SmartAlarms"
 import { DashboardHeader } from "@/pages/dashboard/components/DashboardHeader";
 import { MoodWidget } from "@/features/widgets/MoodWidget/components/MoodWidget";
 import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
+import GithubCommitsWidget from "@/features/widgets/GithubCommitsWidget/components/GithubCommitsWidget";
+
 export function DashboardPage() {
   // const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -78,17 +80,19 @@ export function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="flex flex-col gap-7"
           >
+            {/* section das atividades recentes */}
+            <RecentActivitiesSection />
+
             {/* section do player de musica */}
             <MusicPlayerSection />
-
-            {/* section das atividades recentes */}
-            <section className="bg-black/50 rounded-xl border border-green-500 p-5 shadow-lg">
-              <RecentActivitiesSection />
-            </section>
 
             {/* section das conquistas */}
             <section className="bg-black/50 rounded-xl border border-green-500 p-5 shadow-xl">
               <AchievementsSection />
+            </section>
+
+            <section>
+              <GithubCommitsWidget />
             </section>
           </motion.div>
         </div>

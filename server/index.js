@@ -188,12 +188,15 @@ app.get("/github/commits", async (req, res) => {
       return res.status(404).send("GitHub account not linked.");
     }
 
-    const { github_access_token: accessToken, github_username: username } =
-      profile;
-    const today = new Date().toISOString().split("T")[0];
+    const accessToken = profile.github_access_token;
+    const username = profile.github_username;
 
-    const response = await axios.get(
-      `https://api.github.com/users/${username}/events`,
+    const since = new Date();
+    since.setUTCHours(0, 0, 0, 0);
+    const sinceISO = since.toISOString();
+
+    const reposResponse = await axios.get(
+      "https://api.github.com/user/repos?per_page=100",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -202,19 +205,61 @@ app.get("/github/commits", async (req, res) => {
       }
     );
 
-    const dailyCommits = response.data.filter(
-      (event) =>
-        event.type === "PushEvent" && event.created_at.startsWith(today)
-    );
+    const repos = reposResponse.data;
+    let totalCommits = 0;
+    let recentCommits = [];
 
-    const commitsCount = dailyCommits.reduce(
-      (acc, event) => acc + event.payload.commits.length,
-      0
-    );
+    for (const repo of repos) {
+      try {
+        const commitsResponse = await axios.get(
+          `https://api.github.com/repos/${repo.owner.login}/${repo.name}/commits`,
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "X-GitHub-Api-Version": "2022-11-28",
+            },
+            params: {
+              author: username,
+              since: sinceISO,
+              per_page: 10,
+            },
+          }
+        );
 
-    res.json({ commits: commitsCount });
+        const commits = commitsResponse.data;
+
+        totalCommits += commits.length;
+
+        commits.forEach((commit) => {
+          recentCommits.push({
+            repoName: repo.name,
+            message: commit.commit.message,
+            time: new Date(commit.commit.author.date).toLocaleTimeString(
+              "en-US",
+              {
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+                timeZone: "UTC",
+              }
+            ),
+          });
+        });
+      } catch (err) {
+        console.warn(`Erro ao buscar commits do repositório ${repo.full_name}`);
+        continue;
+      }
+    }
+
+    res.json({
+      count: totalCommits,
+      recentCommits,
+    });
   } catch (error) {
-    console.error("Erro ao buscar commits do GitHub:", error.response?.data);
+    console.error(
+      "Erro ao buscar commits do GitHub:",
+      error.response?.data || error.message
+    );
     res.status(500).send("Erro ao buscar commits.");
   }
 });

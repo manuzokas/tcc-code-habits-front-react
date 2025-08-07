@@ -9,13 +9,15 @@ export interface UserProfile {
   username: string | null;
   avatar_url: string | null;
   email: string;
-  xp: number; 
+  xp: number;
   current_focus_time: number;
   last_activity_at: string | null;
   updated_at: string;
   has_completed_persona_quiz: boolean | null;
   persona: string | null;
-  persona_data: any | null;
+  persona_data: unknown | null;
+  github_username?: string | null;
+  github_access_token?: string | null;
 }
 
 export const useAuth = () => {

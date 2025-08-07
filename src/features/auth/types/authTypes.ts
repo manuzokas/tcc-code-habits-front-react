@@ -38,4 +38,6 @@ export interface Profile {
   created_at: string;
   updated_at: string;
   last_activity_at?: string;
+  github_username?: string | null;
+  github_access_token?: string | null;
 }
