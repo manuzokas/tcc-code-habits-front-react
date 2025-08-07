@@ -26,7 +26,7 @@ export const RecentActivitiesSection = () => {
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.3 }}
       viewport={{ once: true }}
-      className="bg-gradient-to-br from-green-600/10 to-blue-600/10 rounded-xl border border-gray-700 p-4 relative"
+      className="bg-gray-900 rounded-xl border border-green-700 p-4 relative"
     >
       <div className="flex justify-between items-center mb-3">
         <h3 className="text-base font-medium text-white flex items-center gap-2">

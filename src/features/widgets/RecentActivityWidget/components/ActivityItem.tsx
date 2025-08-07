@@ -35,7 +35,7 @@ export const ActivityItem = ({
       whileHover={{ y: compact ? -1 : -2 }}
       className={`${compact ? "py-2 px-2.5" : "p-3"} rounded-lg border ${
         completed
-          ? "border-green-500/20 bg-green-900/10"
+          ? "border-green-500/20 bg-gray-300/10"
           : "border-gray-700 bg-gray-800/30"
       }`}
     >

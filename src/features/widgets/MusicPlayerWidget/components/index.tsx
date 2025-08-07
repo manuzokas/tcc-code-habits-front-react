@@ -177,9 +177,9 @@ export const MusicPlayer = ({
 
   return (
     <div
-      className={`relative flex flex-col bg-gradient-to-br from-green-950 to-blue-700/80 rounded-2xl overflow-hidden transition-all duration-300 ${
+      className={`relative flex flex-col bg-gradient-to-br from-black to-blue-950 ring-2 ring-green-600 rounded-2xl overflow-hidden transition-all duration-300 ${
         isMiniMode ? "w-72" : "w-[300px]"
-      } shadow-2xl border border-green-700`}
+      } shadow-2xl border border-green-200`}
     >
       <div className="absolute inset-0 backdrop-blur-sm bg-white/5" />
       <div className="relative z-10 flex flex-col">

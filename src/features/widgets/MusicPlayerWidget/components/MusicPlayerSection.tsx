@@ -150,7 +150,7 @@ export const MusicPlayerSection = () => {
       className="bg-none py-0 mx-auto"
     >
       <div className="relative flex items-center">
-        <div className="relative shadow-xl shadow-green-400/60 bg-green-800/20 rounded-xl p-3 border border-gray-700">
+        <div className="relative shadow-lg shadow-green-100 bg-green-800/20 rounded-xl p-3 border border-gray-700">
           <MusicPlayer
             spotifyAccessToken={spotifyAccessToken}
             onLogout={handleLogout}

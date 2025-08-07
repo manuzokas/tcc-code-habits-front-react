@@ -20,7 +20,7 @@ const PreCodeSetupCheck = () => {
 
   return (
     <section
-      className={`bg-gradient-to-br from-gray-900 to-emerald-900/20 rounded-2xl border border-emerald-400/20 p-5 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 group w-full max-w-xs mx-auto relative overflow-hidden ${expanded ? "h-auto" : "h-20"}`}
+      className={`bg-gray-900 rounded-xl border border-emerald-400 p-5 shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all duration-300 group w-full max-w-xs mx-auto relative overflow-hidden ${expanded ? "h-auto" : "h-20"}`}
     >
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNjAwIiBvcGFjaXR5PSIwLjAzIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiMwMGFmNzEiIHN0cm9rZS13aWR0aD0iMSI+PHBhdGggZD0iTTAgMGg2MDB2NjAwIi8+PHBhdGggZD0iTTAgNjAwaDYwMCIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
 

@@ -7,7 +7,8 @@ export const connectToGithub = (userId: string) => {
 export interface RecentCommit {
   repoName: string;
   message: string;
-  time: string; // e.g., "14:23"
+  time: string;
+  url: string;
 }
 
 export interface GithubCommitsResponse {

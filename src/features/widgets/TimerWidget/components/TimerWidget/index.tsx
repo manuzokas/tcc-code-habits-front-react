@@ -205,10 +205,10 @@ export function ProductivityTimer() {
 
   return (
     <div
-      className={`relative mx-auto w-full max-w-md border border-zinc-800 rounded-xl bg-black/60 shadow-2xl backdrop-blur-md p-6 transition-all duration-500 ${
+      className={`relative mx-auto w-full max-w-md border border-white rounded-xl bg-black/60 shadow-2xl backdrop-blur-md p-6 transition-all duration-500 ${
         sessionType === "focus"
-          ? "ring-2 ring-blue-500/30"
-          : "ring-2 ring-green-500/30"
+          ? "ring-2 ring-blue-500"
+          : "ring-2 ring-green-500"
       }`}
     >
       <div className="flex items-center justify-between mb-4">

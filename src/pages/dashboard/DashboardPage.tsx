@@ -67,7 +67,7 @@ export function DashboardPage() {
           >
             <PreCodeSetupCheck />
             <SmartAlarms />
-            <section className="bg-gray-400/5 shadow-lg shadow-blue-500 rounded-xl w-fit mx-auto justify-center border border-white/10 p-5">
+            <section className="bg-gray-900/20 shadow-lg shadow-blue-200 rounded-xl w-fit mx-auto justify-center border border-white/10 p-5">
               <ProductivityTimer />
             </section>
             <MiniCalendar />
@@ -80,20 +80,10 @@ export function DashboardPage() {
             transition={{ delay: 0.2 }}
             className="flex flex-col gap-7"
           >
-            {/* section das atividades recentes */}
-            <RecentActivitiesSection />
-
-            {/* section do player de musica */}
             <MusicPlayerSection />
-
-            {/* section das conquistas */}
-            <section className="bg-black/50 rounded-xl border border-green-500 p-5 shadow-xl">
-              <AchievementsSection />
-            </section>
-
-            <section>
-              <GithubCommitsWidget />
-            </section>
+            <GithubCommitsWidget />
+            <RecentActivitiesSection />
+            <AchievementsSection />
           </motion.div>
         </div>
       </main>

@@ -10,9 +10,7 @@ export const TimerSection = () => {
       viewport={{ once: true }}
       className="bg-none flex p-10"
     >
-      <div className="relative shadow-xl shadow-green-300/70 bg-green-800/40 rounded-xl p-3 border border-gray-700">
         <ProductivityTimer />
-      </div>
     </motion.div>
   );
 };

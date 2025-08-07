@@ -7,6 +7,7 @@ interface RecentCommit {
   repoName: string;
   message: string;
   time: string;
+  url: string;
 }
 
 interface GithubCommitData {

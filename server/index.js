@@ -234,6 +234,7 @@ app.get("/github/commits", async (req, res) => {
           recentCommits.push({
             repoName: repo.name,
             message: commit.commit.message,
+            url: commit.html_url,
             time: new Date(commit.commit.author.date).toLocaleTimeString(
               "en-US",
               {

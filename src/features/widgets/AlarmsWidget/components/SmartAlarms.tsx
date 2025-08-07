@@ -50,7 +50,7 @@ const SmartAlarms = () => {
 
   return (
     <section
-      className={`bg-gradient-to-br from-gray-900 to-blue-900/20 rounded-2xl border border-blue-400/20 p-5 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 group w-full max-w-xs mx-auto relative overflow-hidden ${
+      className={`bg-gray-900 rounded-xl border border-blue-400 p-5 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 group w-full max-w-xs mx-auto relative overflow-hidden ${
         expanded ? "h-auto" : "h-20"
       }`}
     >
