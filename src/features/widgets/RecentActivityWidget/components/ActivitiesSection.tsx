@@ -8,6 +8,10 @@ import { useState } from "react";
 export const RecentActivitiesSection = () => {
   const { activities, isLoading, refetch } = useRecentActivities();
   const [isRefreshing, setIsRefreshing] = useState(false);
+  // Novo estado para controlar se a lista está expandida
+  const [isExpanded, setIsExpanded] = useState(false);
+  // Constante para o número máximo de itens visíveis
+  const MAX_ACTIVITIES_VISIBLE = 3;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -19,6 +23,19 @@ export const RecentActivitiesSection = () => {
       setIsRefreshing(false);
     }
   };
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
+
+  // Lógica para determinar quais atividades exibir, com verificação de nulidade
+  const activitiesToShow = isExpanded
+    ? activities
+    : activities?.slice(0, MAX_ACTIVITIES_VISIBLE);
+
+  // Verificação de nulidade antes de checar o tamanho
+  const hasMoreActivities =
+    activities && activities.length > MAX_ACTIVITIES_VISIBLE;
 
   return (
     <motion.div
@@ -54,18 +71,32 @@ export const RecentActivitiesSection = () => {
             Carregando atividades...
           </div>
         ) : activities && activities.length > 0 ? (
-          activities.map((activity) => (
-            <ActivityItem
-              key={activity.id}
-              action={activity.action}
-              xp={activity.xp}
-              time={activity.time}
-              healthImpact={activity.healthImpact}
-              completed={activity.completed}
-              icon={activity.icon}
-              compact
-            />
-          ))
+          // Renderiza a lista de atividades (a variável `activitiesToShow`)
+          <>
+            {activitiesToShow?.map((activity) => (
+              <ActivityItem
+                key={activity.id}
+                action={activity.action}
+                xp={activity.xp}
+                time={activity.time}
+                healthImpact={activity.healthImpact}
+                completed={activity.completed}
+                icon={activity.icon}
+                compact
+              />
+            ))}
+            {/* Botão de expandir/recolher */}
+            {hasMoreActivities && (
+              <button
+                onClick={handleToggleExpand}
+                className="w-full text-center text-xs font-medium text-emerald-400 hover:underline mt-2"
+              >
+                {isExpanded
+                  ? "Recolher"
+                  : `Expandir (${activities.length - MAX_ACTIVITIES_VISIBLE} mais)`}
+              </button>
+            )}
+          </>
         ) : (
           <div className="flex flex-col items-center justify-center p-4 text-zinc-400 text-center">
             <ThumbsUp size={24} className="mb-2" />
