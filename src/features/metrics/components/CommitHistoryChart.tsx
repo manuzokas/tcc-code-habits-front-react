@@ -12,7 +12,7 @@ import {
 } from "recharts";
 import type { CommitHistoryData, Period } from "../hooks/useCommitHistory";
 
-// Tooltip customizado (pode usar o mesmo do outro gráfico)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
@@ -25,7 +25,6 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// Formata a data para o eixo X
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr);
   return `${date.getUTCDate().toString().padStart(2, "0")}/${(date.getUTCMonth() + 1).toString().padStart(2, "0")}`;
@@ -40,7 +39,6 @@ export const CommitHistoryChart: React.FC<CommitHistoryChartProps> = ({
   history,
   period,
 }) => {
-  // Para 7 dias, um gráfico de barras fica bom. Para 30 dias, um de linha é melhor.
   const ChartComponent = period === "7days" ? BarChart : LineChart;
   const ChartElement =
     period === "7days" ? (

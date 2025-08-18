@@ -31,8 +31,8 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
     { name: "Dashboard", icon: "LayoutDashboard", path: "/dashboard" },
     { name: "Métricas", icon: "Activity", path: "/metrics" },
     { name: "Timer", icon: "Timer", path: "/timer" },
-    { name: "Música", icon: "Music", path: "/music" },
-    { name: "Conquistas", icon: "Trophy", path: "/achievements" },
+    // { name: "Música", icon: "Music", path: "/music" },
+    // { name: "Conquistas", icon: "Trophy", path: "/achievements" },
     { name: "Configurações", icon: "Settings", path: "/settings" },
   ];
 

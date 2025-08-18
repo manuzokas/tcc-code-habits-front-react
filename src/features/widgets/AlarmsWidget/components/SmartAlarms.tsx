@@ -1,35 +1,40 @@
 import { useState } from "react";
 import { useSmartAlarms } from "../hooks/useSmartAlarms";
+import { motion, AnimatePresence } from "framer-motion";
 
 const SmartAlarms = () => {
   const [expanded, setExpanded] = useState(false);
-  const { alarms, isLoading, addAlarm, deleteAlarm, toggleAlarm } =
-    useSmartAlarms();
+  const {
+    alarms,
+    isLoading,
+    addAlarm,
+    deleteAlarm,
+    toggleAlarm,
+    ringingAlarmId,
+    dismissAlarm,
+  } = useSmartAlarms();
 
   const [newAlarmData, setNewAlarmData] = useState({
-    time: "15:00",
+    time: "09:00",
     title: "",
     days_of_week: ["Daily"],
   });
 
+  const ringingAlarm = alarms.find((alarm) => alarm.id === ringingAlarmId);
+
   const toggleExpand = () => {
+    if (ringingAlarmId) return;
     setExpanded(!expanded);
   };
 
   const handleAddAlarm = async () => {
     if (newAlarmData.title.trim() === "") return;
-
     await addAlarm({
       title: newAlarmData.title,
-      time: newAlarmData.time + ":00", 
+      time: newAlarmData.time,
       days_of_week: newAlarmData.days_of_week,
     });
-
-    setNewAlarmData({
-      time: "15:00",
-      title: "",
-      days_of_week: ["Daily"],
-    });
+    setNewAlarmData({ time: "09:00", title: "", days_of_week: ["Daily"] });
   };
 
   const handleDeleteAlarm = async (alarmId: string) => {
@@ -50,11 +55,58 @@ const SmartAlarms = () => {
 
   return (
     <section
-      className={`bg-gray-900 rounded-xl border border-blue-400 p-5 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 group w-full max-w-xs mx-auto relative overflow-hidden ${
-        expanded ? "h-auto" : "h-20"
+      className={`relative bg-gray-900 rounded-xl border border-blue-400 p-5 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all duration-300 group w-full max-w-xs mx-auto overflow-hidden ${
+        ringingAlarmId ? "h-[170px]" : expanded ? "h-auto" : "h-20" // Altura fixa quando toca
       }`}
     >
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MDAiIGhlaWdodD0iNjAwIiBvcGFjaXR5PSIwLjAzIj48ZyBmaWxsPSJub25lIiBzdHJva2U9IiA0YjY2ZmYiIHN0cm9rZS13aWR0aD0iMSI+PHBhdGggZD0iTTAgMGg2MDB2NjAwIi8+PHBhdGggZD0iTTAgNjAwaDYwMCIvPjwvZz48L3N2Zz4=')] opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
+      <AnimatePresence>
+        {ringingAlarm && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.2 }}
+            className="absolute inset-0 bg-blue-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center text-center"
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                transition: { duration: 1, repeat: Infinity },
+              }}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="48"
+                height="48"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-200"
+              >
+                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                <path d="M12 6v6l4 2"></path>
+              </svg>
+            </motion.div>
+
+            <h3 className="text-lg font-bold text-red-500">
+              Alarme Tocando!
+            </h3>
+            <p className="text-red-200 mb-4">{ringingAlarm.title}</p>
+
+            <button
+              onClick={dismissAlarm}
+              className="px-4 py-1 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg shadow-lg transition-colors"
+            >
+              Dispensar
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,...')] opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
 
       <div
         className="flex items-center justify-between relative z-10 cursor-pointer"
@@ -84,7 +136,7 @@ const SmartAlarms = () => {
             </h3>
             <p className="text-xs text-blue-400/80">
               {expanded
-                ? "Gerencie seus lembretes inteligentes"
+                ? "Gerencie seus lembretes"
                 : `${alarms.filter((a) => a.is_active).length} ativos`}
             </p>
           </div>
@@ -106,9 +158,7 @@ const SmartAlarms = () => {
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            className={`transition-transform duration-300 ${
-              expanded ? "rotate-180" : ""
-            }`}
+            className={`transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
           >
             <path d="m6 9 6 6 6-6"></path>
           </svg>
@@ -116,7 +166,11 @@ const SmartAlarms = () => {
       </div>
 
       {expanded && (
-        <div className="mt-4 relative z-10 space-y-4">
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-4 relative z-10 space-y-4"
+        >
           <div className="space-y-2">
             <h4 className="text-sm font-medium text-blue-200 flex items-center gap-2">
               <svg
@@ -133,7 +187,6 @@ const SmartAlarms = () => {
               </svg>
               Active Alarms
             </h4>
-
             {isLoading ? (
               <p className="text-xs text-center text-blue-400/60 py-2">
                 Loading alarms...
@@ -149,14 +202,12 @@ const SmartAlarms = () => {
                       onClick={() => toggleAlarm(alarm.id, alarm.is_active)}
                     >
                       <div
-                        className={`w-3 h-3 rounded-full transition-colors ${
-                          alarm.is_active
-                            ? "bg-blue-400 animate-pulse"
-                            : "bg-gray-500"
-                        }`}
+                        className={`w-3 h-3 rounded-full transition-colors ${alarm.is_active ? "bg-blue-400 animate-pulse" : "bg-gray-500"}`}
                       ></div>
                     </button>
-                    <span className="font-mono">{alarm.time}</span>
+                    <span className="font-mono text-sm">
+                      {alarm.time.substring(0, 5)}
+                    </span>
                     <span className="text-xs text-blue-300/70">
                       {alarm.title}
                     </span>
@@ -187,21 +238,17 @@ const SmartAlarms = () => {
               </p>
             )}
           </div>
-
           <div className="pt-2 border-t border-blue-900/50">
             <h4 className="text-sm font-medium text-blue-200 mb-2">
               New Alarm
             </h4>
-
             <div className="grid grid-cols-2 gap-2 mb-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="time"
-                  className="bg-blue-900/30 border border-blue-700/30 rounded px-2 py-1 text-sm font-mono w-full"
-                  value={newAlarmData.time}
-                  onChange={handleTimeChange}
-                />
-              </div>
+              <input
+                type="time"
+                className="bg-blue-900/30 border border-blue-700/30 rounded px-2 py-1 text-sm font-mono w-full"
+                value={newAlarmData.time}
+                onChange={handleTimeChange}
+              />
               <input
                 type="text"
                 placeholder="Alarm name"
@@ -210,10 +257,9 @@ const SmartAlarms = () => {
                 onChange={handleTitleChange}
               />
             </div>
-
             <div className="flex items-center gap-2 mb-3">
               <select
-                className="bg-blue-900/30 border border-blue-700/30 rounded px-2 py-1 text-xs"
+                className="bg-blue-900/30 border border-blue-700/30 rounded px-2 py-1 text-xs w-full"
                 value={newAlarmData.days_of_week[0] || "Daily"}
                 onChange={handleRepeatChange}
               >
@@ -222,9 +268,8 @@ const SmartAlarms = () => {
                 <option value="Weekly">Weekly</option>
               </select>
             </div>
-
             <button
-              className="w-full text-sm bg-blue-600/20 hover:bg-blue-600/40 text-white px-4 py-2 rounded-lg border border-blue-700 flex items-center justify-center gap-2"
+              className="w-full text-sm bg-blue-600/20 hover:bg-blue-600/40 text-white px-4 py-2 rounded-lg border border-blue-700 flex items-center justify-center gap-2 disabled:opacity-50"
               onClick={handleAddAlarm}
               disabled={!newAlarmData.title.trim()}
             >
@@ -244,7 +289,7 @@ const SmartAlarms = () => {
               Add Alarm
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
       <div className="absolute inset-0 -z-10 rounded-2xl bg-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
     </section>
