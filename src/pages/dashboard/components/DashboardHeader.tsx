@@ -6,11 +6,7 @@ import { useRecentActivities } from "@/features/widgets/RecentActivityWidget/hoo
 import type { MissionKeyType } from "@/features/gamification/types/missions";
 import { useState } from "react";
 
-interface DashboardHeaderProps {
-  sidebarOpen: boolean;
-}
-
-export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
+export const DashboardHeader = () => {
   const {
     userLevel,
     xpCurrentLevel,
@@ -50,11 +46,7 @@ export const DashboardHeader = ({ sidebarOpen }: DashboardHeaderProps) => {
   };
 
   return (
-    <header
-      className={`sticky top-0 z-30 bg-gray-950 backdrop-blur-md border-b border-emerald-500/30 shadow-lg shadow-emerald-600 transition-all duration-300 ${
-        sidebarOpen ? "ml-64" : "ml-0"
-      }`}
-    >
+    <header className="top-0 z-30 bg-gray-950 backdrop-blur-xs border-b border-emerald-600 shadow-emerald-700 shadow-md mb-5">
       <div className="container mx-auto px-9 py-7">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">

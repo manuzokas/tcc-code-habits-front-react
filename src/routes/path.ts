@@ -4,6 +4,7 @@ export const PATHS = {
   REGISTER: "/sign-up",
   DASHBOARD: "/dashboard",
   ONBOARDING: "/onboarding",
+  METRICS: "/metrics",
   SPOTIFY_CALLBACK: "/dashboard/spotify-callback",
 } as const;
 
@@ -18,4 +19,12 @@ export type PublicPath =
   | typeof PATHS.LOGIN
   | typeof PATHS.REGISTER
   | typeof PATHS.SPOTIFY_CALLBACK;
-  
+
+export const isPublicPath = (path: string): path is PublicPath => {
+  return (
+    path === PATHS.HOME ||
+    path === PATHS.LOGIN ||
+    path === PATHS.REGISTER ||
+    path === PATHS.SPOTIFY_CALLBACK
+  );
+};
