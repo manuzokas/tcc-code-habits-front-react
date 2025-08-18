@@ -1,5 +1,3 @@
-"use client";
-
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Settings,
@@ -17,6 +15,7 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { useTimerConfig } from "../../hooks/useTimerConfig";
+import { playAlarmSound, stopAlarmSound } from "@/shared/services/audioService";
 
 type SessionType = "focus" | "break";
 
@@ -30,6 +29,7 @@ export function ProductivityTimer() {
   const [isMiniMode, setIsMiniMode] = useState<boolean>(false);
   const [healthTip, setHealthTip] = useState<string>("");
   const [completedSessions, setCompletedSessions] = useState<number>(0);
+  const [isRinging, setIsRinging] = useState<boolean>(false);
 
   const [localSettings, setLocalSettings] = useState<{
     focus_duration_minutes: number;
@@ -38,8 +38,16 @@ export function ProductivityTimer() {
     pomodoros_before_long_break: number;
   } | null>(null);
 
+  const dismissTimerAlarm = () => {
+    stopAlarmSound();
+    setIsRinging(false);
+  };
+
   const switchSession = useCallback(() => {
     if (!config) return;
+
+    playAlarmSound();
+    setIsRinging(true);
 
     if (sessionType === "focus") {
       setCompletedSessions((prev) => prev + 1);
@@ -49,7 +57,7 @@ export function ProductivityTimer() {
       setSessionType("focus");
       setTime(0);
     }
-    setIsActive(true);
+    setIsActive(false);
   }, [sessionType, config]);
 
   const getHealthTip = useCallback((): string => {
@@ -79,6 +87,8 @@ export function ProductivityTimer() {
   const handleReset = useCallback(() => {
     if (!config) return;
     setIsActive(false);
+    stopAlarmSound();
+    setIsRinging(false);
     setSessionType("focus");
     setTime(0);
     setCompletedSessions(0);
@@ -92,8 +102,9 @@ export function ProductivityTimer() {
         long_break_duration_minutes: config.long_break_duration_minutes,
         pomodoros_before_long_break: config.pomodoros_before_long_break,
       });
-      setTime(0);
+      handleReset();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
 
   useEffect(() => {
@@ -103,7 +114,8 @@ export function ProductivityTimer() {
     const currentDurationInSeconds =
       sessionType === "focus"
         ? config.focus_duration_minutes * 60
-        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+        : completedSessions % config.pomodoros_before_long_break === 0 &&
+            completedSessions > 0
           ? config.long_break_duration_minutes * 60
           : config.short_break_duration_minutes * 60;
 
@@ -112,7 +124,6 @@ export function ProductivityTimer() {
         setTime((prev) => prev + 1);
       }, 1000);
     } else if (isActive && time >= currentDurationInSeconds) {
-      setIsActive(false);
       switchSession();
     }
 
@@ -146,7 +157,8 @@ export function ProductivityTimer() {
     const currentDurationInSeconds =
       sessionType === "focus"
         ? config.focus_duration_minutes * 60
-        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+        : completedSessions % config.pomodoros_before_long_break === 0 &&
+            completedSessions > 0
           ? config.long_break_duration_minutes * 60
           : config.short_break_duration_minutes * 60;
 
@@ -160,17 +172,21 @@ export function ProductivityTimer() {
     const currentDurationInSeconds =
       sessionType === "focus"
         ? config.focus_duration_minutes * 60
-        : (completedSessions + 1) % config.pomodoros_before_long_break === 0
+        : completedSessions % config.pomodoros_before_long_break === 0 &&
+            completedSessions > 0
           ? config.long_break_duration_minutes * 60
           : config.short_break_duration_minutes * 60;
+    if (currentDurationInSeconds === 0) return 0;
     return (time / currentDurationInSeconds) * 100;
   };
 
   const handleToggle = () => {
+    if (isRinging) return;
     setIsActive(!isActive);
   };
 
   const handleSessionButtonClick = (type: SessionType) => {
+    if (isRinging) return;
     setIsActive(false);
     setSessionType(type);
     setTime(0);
@@ -205,12 +221,55 @@ export function ProductivityTimer() {
 
   return (
     <div
-      className={`relative mx-auto w-full max-w-md border border-white rounded-xl bg-black/60 shadow-2xl backdrop-blur-md p-6 transition-all duration-500 ${
-        sessionType === "focus"
-          ? "ring-2 ring-blue-500"
-          : "ring-2 ring-green-500"
+      className={`relative mx-auto w-full max-w-md border rounded-xl bg-black/60 shadow-2xl backdrop-blur-md p-6 transition-all duration-500 ${
+        sessionType === "focus" ? "border-blue-500/50" : "border-green-500/50"
       }`}
     >
+      <AnimatePresence>
+        {isRinging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 bg-gray-950/80 backdrop-blur-sm z-20 flex flex-col items-center justify-center p-4 text-center rounded-xl"
+          >
+            <motion.div
+              animate={{
+                scale: [1, 1.1, 1],
+                transition: {
+                  duration: 1.2,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                },
+              }}
+              className={`p-4 rounded-full mb-4 ${
+                sessionType === "break" ? "bg-green-500/20" : "bg-blue-500/20"
+              }`}
+            >
+              {sessionType === "break" ? (
+                <Coffee size={32} className="text-green-300" />
+              ) : (
+                <Zap size={32} className="text-blue-300" />
+              )}
+            </motion.div>
+            <h3 className="text-2xl font-bold text-white mb-2">
+              {sessionType === "break" ? "Pausa Merecida!" : "Hora de Focar!"}
+            </h3>
+            <p className="text-gray-300 mb-6">
+              {sessionType === "break"
+                ? "Sua sessão de foco terminou."
+                : "A pausa acabou. Vamos para a próxima sessão!"}
+            </p>
+            <button
+              onClick={dismissTimerAlarm}
+              className="px-8 py-2 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-lg shadow-lg transition-colors"
+            >
+              Ok
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2 text-md font-medium text-zinc-200">
           <Code2 size={16} className="text-green-400" />
@@ -232,7 +291,6 @@ export function ProductivityTimer() {
         </div>
       </div>
 
-      {/* PAINEL DE CONFIGURAÇÕES */}
       <AnimatePresence>
         {showSettings && localSettings && (
           <motion.div
@@ -264,7 +322,7 @@ export function ProductivityTimer() {
 
               <div>
                 <label className="block text-sm text-zinc-300 mb-1">
-                  Duração da Pausa: {localSettings.short_break_duration_minutes}
+                  Duração da Pausa: {localSettings.short_break_duration_minutes}{" "}
                   min
                 </label>
                 <input
@@ -326,7 +384,7 @@ export function ProductivityTimer() {
               cy="50"
               r="45"
               fill="none"
-              stroke={sessionType === "focus" ? "#60a5fa" : "#34d399"}
+              stroke={sessionType === "focus" ? "#3b82f6" : "#22c55e"}
               strokeWidth="8"
               strokeLinecap="round"
               initial={{ strokeDashoffset: 283 }}
@@ -347,7 +405,8 @@ export function ProductivityTimer() {
       <div className="flex justify-center gap-2 mb-4">
         <button
           onClick={() => handleSessionButtonClick("focus")}
-          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors ${
+          disabled={isRinging}
+          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
             sessionType === "focus"
               ? "bg-blue-700 text-white"
               : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -357,7 +416,8 @@ export function ProductivityTimer() {
         </button>
         <button
           onClick={handleToggle}
-          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors ${
+          disabled={isRinging}
+          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
             isActive ? "bg-red-700 text-white" : "bg-zinc-700 text-zinc-100"
           }`}
         >
@@ -366,7 +426,8 @@ export function ProductivityTimer() {
         </button>
         <button
           onClick={() => handleSessionButtonClick("break")}
-          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors ${
+          disabled={isRinging}
+          className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
             sessionType === "break"
               ? "bg-green-700 text-white"
               : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
@@ -405,7 +466,8 @@ export function ProductivityTimer() {
             <div className="flex justify-center">
               <button
                 onClick={handleReset}
-                className="text-xs text-zinc-200 bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded flex items-center gap-1"
+                disabled={isRinging}
+                className="text-xs text-zinc-200 bg-zinc-700 hover:bg-zinc-600 px-3 py-1 rounded flex items-center gap-1 disabled:opacity-50"
               >
                 <RefreshCw size={14} /> Reiniciar
               </button>
