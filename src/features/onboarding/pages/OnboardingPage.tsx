@@ -1,15 +1,18 @@
-// src/features/onboarding/pages/OnboardingPage.tsx
 import { useState } from "react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { PersonaQuiz } from "@/features/onboarding/components/PersonaQuiz";
 import { usePersonaQuiz } from "../hooks/usePersonaQuiz";
 import { ResultScreen } from "../components/ResultScreen";
 import { ProgressBar } from "@/shared/components/atoms/ProgressBar";
-import { supabase } from "@/api/supabase";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/routes/path";
 
 export function OnboardingPage() {
   const { completePersonaQuiz, isSignedIn, isLoaded } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const {
     currentQuestion,
     progress,
@@ -21,24 +24,16 @@ export function OnboardingPage() {
   } = usePersonaQuiz();
 
   const handleComplete = async () => {
-    console.log("OnboardingPage: Início de handleComplete.");
     if (!result) {
-      console.warn("OnboardingPage: Resultado do quiz ainda não disponível.");
-      setError("Por favor, complete o quiz.");
+      setError("Resultado do quiz não encontrado. Por favor, tente refazer.");
       return;
     }
-    setError(null); // Limpa erros anteriores
+
+    setIsSubmitting(true);
+    setError(null);
 
     try {
-      console.log(
-        "OnboardingPage: Forçando refresh da sessão antes de completePersonaQuiz..."
-      );
-      await supabase.auth.refreshSession();
-      console.log(
-        "OnboardingPage: Sessão refreshada. Chamando completePersonaQuiz..."
-      );
-      console.log("OnboardingPage: Chamando completePersonaQuiz...");
-      const { success } = await completePersonaQuiz({
+      await completePersonaQuiz({
         answers,
         result: {
           persona: result.persona,
@@ -48,56 +43,35 @@ export function OnboardingPage() {
         completedAt: new Date().toISOString(),
       });
 
-      if (success) {
-        console.log(
-          "OnboardingPage: completePersonaQuiz retornou sucesso. Forçando refresh da sessão para garantir metadados atualizados para redirecionamento."
-        );
-        
-        await supabase.auth.refreshSession();
-        console.log(
-          "OnboardingPage: Quiz completado com sucesso. Deixando o useAuthRedirect lidar com a navegação para o dashboard."
-        );
-      } else {
-        console.log(
-          "OnboardingPage: completePersonaQuiz não retornou sucesso, mas não lançou erro."
-        );
-        setError("Ocorreu um problema ao salvar os dados. Tente novamente.");
-      }
-    } catch (error: any) {
-      console.error(
-        "OnboardingPage: Erro capturado em handleComplete (do completePersonaQuiz):",
-        error
+      console.log(
+        "OnboardingPage: Quiz salvo com sucesso. Navegando para o dashboard..."
       );
-      let errorMessage = "Erro ao salvar resultados.";
-
-      if (error.code === "23505") {
-        errorMessage = "Perfil já existe. Redirecionando...";
-        console.log(
-          "OnboardingPage: Erro 23505 (Conflito), o useAuthRedirect cuidará do redirecionamento."
-        );
-      } else if (error.code === "PGRST116" || error.code === "406") {
-        errorMessage =
-          "Dados não encontrados ou não aceitáveis. Tente novamente.";
-        console.log(
-          "OnboardingPage: Erro PGRST116/406 (Não encontrado/Não Aceitável)."
-        );
-      } else if (error.code === "42501") {
-        errorMessage =
-          "Erro de permissão: Você não tem acesso para realizar esta operação. Verifique as políticas de RLS.";
-        console.error("OnboardingPage: Erro de RLS 42501 detectado!");
-      }
-
-      setError(errorMessage);
-      console.error("OnboardingPage: Erro detalhado (para o usuário):", {
-        code: error.code,
-        message: error.message,
-        stack: error.stack,
-      });
+      navigate(PATHS.DASHBOARD, { replace: true });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      console.error("OnboardingPage: Erro capturado em handleComplete:", err);
+      setError(
+        err.message || "Ocorreu um erro ao salvar seu perfil. Tente novamente."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (!isLoaded || !isSignedIn) {
-    return null;
+  if (!isLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+        Carregando...
+      </div>
+    );
+  }
+
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-gray-950 flex items-center justify-center text-white">
+        Redirecionando...
+      </div>
+    );
   }
 
   return (
@@ -116,11 +90,12 @@ export function OnboardingPage() {
           </div>
         )}
 
-        {isComplete && result ? ( 
+        {isComplete && result ? (
           <ResultScreen
             result={result}
             onComplete={handleComplete}
             onRetry={resetQuiz}
+            isSubmitting={isSubmitting}
           />
         ) : (
           <PersonaQuiz question={currentQuestion} onAnswer={handleAnswer} />

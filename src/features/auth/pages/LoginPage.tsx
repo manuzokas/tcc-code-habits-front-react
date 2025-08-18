@@ -1,29 +1,45 @@
-// src/features/auth/pages/LoginPage.tsx
 import { AuthHeader } from "../components/AuthHeader";
 import { AuthForm } from "../components/AuthForm";
 import { AuthSocialButtons } from "../components/AuthSocialButtons";
 import { motion } from "framer-motion";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { PATHS } from "@/routes/path";
 
 export default function LoginPage() {
-  const { signIn, signInWithProvider, isLoading } = useAuth();
+  const { signIn, signInWithProvider, isLoading, hasCompletedPersonaQuiz } =
+    useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (data: { email: string; password: string }) => {
     setError(null);
     const { error } = await signIn(data.email, data.password);
-    if (error) setError(error.message);
+
+    if (error) {
+      setError(error.message);
+    } else {
+      if (hasCompletedPersonaQuiz) {
+        navigate(PATHS.DASHBOARD, { replace: true });
+      } else {
+        navigate(PATHS.ONBOARDING, { replace: true });
+      }
+    }
   };
 
-  const handleSocialLogin = (provider: "github" | "google" | "gitlab") => {
-    signInWithProvider(provider).catch((err) => {
-      setError(err.message);
-    });
+  const handleSocialLogin = async (
+    provider: "github" | "google" | "gitlab"
+  ) => {
+    setError(null);
+    const { error } = await signInWithProvider(provider);
+    if (error) {
+      setError(error.message);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center px-4 py-35">
+    <div className="min-h-screen bg-[#0d1117] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md space-y-8">
         <AuthHeader mode="login" />
 

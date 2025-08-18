@@ -17,23 +17,25 @@ export const useAuthRedirect = () => {
     const isSignedIn = !!session;
 
     if (isSignedIn) {
+      if (currentPath === PATHS.LOGIN || currentPath === PATHS.REGISTER) {
+        if (hasCompletedPersonaQuiz) {
+          navigate(PATHS.DASHBOARD, { replace: true });
+        } else {
+          navigate(PATHS.ONBOARDING, { replace: true });
+        }
+        return;
+      }
+
       if (!hasCompletedPersonaQuiz && currentPath !== PATHS.ONBOARDING) {
         navigate(PATHS.ONBOARDING, { replace: true });
         return;
       }
 
-      if (hasCompletedPersonaQuiz) {
-        if (currentPath === PATHS.ONBOARDING) {
-          navigate(PATHS.DASHBOARD, { replace: true });
-          return;
-        }
-        if (currentPath === PATHS.LOGIN || currentPath === PATHS.REGISTER) {
-          navigate(PATHS.DASHBOARD, { replace: true });
-          return;
-        }
+      if (hasCompletedPersonaQuiz && currentPath === PATHS.ONBOARDING) {
+        navigate(PATHS.DASHBOARD, { replace: true });
+        return;
       }
     } else {
-      
       if (!isPublicPath(currentPath)) {
         navigate(PATHS.LOGIN, { replace: true });
       }

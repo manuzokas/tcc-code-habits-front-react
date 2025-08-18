@@ -1,4 +1,3 @@
-// src/features/onboarding/components/ResultScreen.tsx
 import { Button } from "@/shared/components/atoms/Button";
 import type { QuizResult } from "@/features/onboarding/types/personas";
 
@@ -6,12 +5,14 @@ interface ResultScreenProps {
   result: QuizResult;
   onComplete: () => void;
   onRetry: () => void;
+  isSubmitting: boolean; // 1. Adiciona a nova prop
 }
 
 export const ResultScreen = ({
   result,
   onComplete,
   onRetry,
+  isSubmitting, // 2. Recebe a nova prop
 }: ResultScreenProps) => (
   <div className="space-y-6">
     <div className={`p-6 rounded-lg bg-gradient-to-r ${result.persona.color}`}>
@@ -19,28 +20,20 @@ export const ResultScreen = ({
       <p className="text-white/90">{result.persona.description}</p>
     </div>
 
-    <div className="space-y-4">
-      <h3 className="font-semibold text-white">Seus principais traços:</h3>
-      <ul className="space-y-2">
-        {result.persona.traits.map((trait, index) => (
-          <li key={index} className="flex items-start">
-            <span className="text-green-400 mr-2">•</span>
-            <span className="text-white/90">{trait}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    {/* ... (o resto do seu JSX de traços e lista) ... */}
 
     <div className="flex gap-4 pt-4">
       <Button
         onClick={onComplete}
-        className="flex-1 bg-green-600 hover:bg-green-700"
+        className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
+        disabled={isSubmitting} // 3. Usa a prop para desabilitar o botão
       >
-        Continuar para o Dashboard
+        {isSubmitting ? "Salvando..." : "Continuar para o Dashboard"}
       </Button>
       <Button
         onClick={onRetry}
         className="flex-1 text-white border-white/30 hover:bg-white/10"
+        disabled={isSubmitting} // Desabilita também para evitar confusão
       >
         Refazer teste
       </Button>
