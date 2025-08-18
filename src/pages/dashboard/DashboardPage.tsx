@@ -13,7 +13,7 @@ import { DashboardHeader } from "@/pages/dashboard/components/DashboardHeader";
 import { MoodWidget } from "@/features/widgets/MoodWidget/components/MoodWidget";
 import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
 import GithubCommitsWidget from "@/features/widgets/GithubCommitsWidget/components/GithubCommitsWidget";
-import { HealthTipsWidget } from "@/features/widgets/HealthTipsWidget/components/HealthTipsSection";
+import { HealthTipsSection } from "../../features/widgets/HealthTipsWidget/components/HealthTipsSection";
 
 export function DashboardPage() {
   // const { user, logout } = useAuth();
@@ -58,7 +58,7 @@ export function DashboardPage() {
               <HealthMetricsSection />
             </section>
 
-            <HealthTipsWidget/>
+            <HealthTipsSection/>
           </motion.div>
 
           {/* segunda coluna: missoes do dia + timer */}

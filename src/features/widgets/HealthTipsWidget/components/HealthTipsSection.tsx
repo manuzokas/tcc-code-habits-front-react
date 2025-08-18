@@ -25,7 +25,7 @@ const healthTips = [
   },
 ];
 
-export const HealthTipsWidget = () => {
+export const HealthTipsSection = () => {
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
 
   useEffect(() => {
