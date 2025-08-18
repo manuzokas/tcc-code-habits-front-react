@@ -100,7 +100,7 @@ export const GithubCommitsWidget: React.FC = () => {
   };
 
   return (
-    <Card className="w-full rounded-xl shadow-lg bg-gray-900 border border-gray-700 p-4">
+    <Card className="w-full rounded-xl shadow-lg bg-gray-900 border border-green-400 p-4">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-lg font-semibold text-white flex items-center gap-2">
           <FaGithub className="text-xl" />

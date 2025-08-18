@@ -1,14 +1,33 @@
 import React from "react";
 import { useGithubCommits } from "@/features/widgets/GithubCommitsWidget/hooks/useGithubCommits";
-import { CommitActivityChart } from "@/features/metrics/components/CommitActivityChart"; // Verifique o caminho
+import { useCommitHistory } from "@/features/metrics/hooks/useCommitHistory";
+import { CommitActivityChart } from "@/features/metrics/components/CommitActivityChart";
+import { CommitHistoryChart } from "@/features/metrics/components/CommitHistoryChart";
 import { SpinnerIcon } from "@phosphor-icons/react";
 import { FaGithub } from "react-icons/fa";
+import { cn } from "@/assets/styles/utils/tw";
 
 export const MetricsPage: React.FC = () => {
-  const { isGithubConnected, commitTimestamps, isLoading, error } =
-    useGithubCommits();
+  // Hook para os dados de HOJE
+  const {
+    isGithubConnected,
+    commitTimestamps,
+    isLoading: isLoadingToday,
+    error: errorToday,
+  } = useGithubCommits();
+  // Hook para os dados HISTÓRICOS
+  const {
+    period,
+    setPeriod,
+    history,
+    isLoading: isLoadingHistory,
+    error: errorHistory,
+  } = useCommitHistory();
 
   const renderChartContent = () => {
+    const isLoading = period === "today" ? isLoadingToday : isLoadingHistory;
+    const error = period === "today" ? errorToday : errorHistory;
+
     if (isLoading) {
       return (
         <div className="flex justify-center items-center h-64">
@@ -26,6 +45,7 @@ export const MetricsPage: React.FC = () => {
     }
 
     if (!isGithubConnected) {
+      // (O conteúdo de "não conectado" permanece o mesmo)
       return (
         <div className="text-center py-10">
           <FaGithub className="mx-auto text-5xl text-gray-500 mb-4" />
@@ -40,16 +60,31 @@ export const MetricsPage: React.FC = () => {
       );
     }
 
-    if (commitTimestamps.length === 0) {
-      return (
-        <p className="text-gray-400 text-center mt-4 h-64 flex items-center justify-center">
-          Nenhum commit encontrado hoje para gerar o gráfico.
-        </p>
-      );
+    // Renderiza o gráfico correto baseado no período
+    if (period === "today") {
+      if (commitTimestamps.length === 0)
+        return (
+          <p className="text-gray-400 text-center mt-4 h-64 flex items-center justify-center">
+            Nenhum commit encontrado hoje.
+          </p>
+        );
+      return <CommitActivityChart timestamps={commitTimestamps} />;
+    } else {
+      if (history.length === 0)
+        return (
+          <p className="text-gray-400 text-center mt-4 h-64 flex items-center justify-center">
+            Nenhum dado de commit encontrado para este período.
+          </p>
+        );
+      return <CommitHistoryChart history={history} period={period} />;
     }
-
-    return <CommitActivityChart timestamps={commitTimestamps} />;
   };
+
+  const periodOptions = [
+    { key: "today", label: "Hoje" },
+    { key: "7days", label: "Últimos 7 dias" },
+    { key: "30days", label: "Últimos 30 dias" },
+  ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full">
@@ -63,12 +98,33 @@ export const MetricsPage: React.FC = () => {
       </div>
 
       <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
-        <h2 className="text-xl font-semibold text-white">
-          Atividade de Commits por Hora (Hoje)
-        </h2>
-        <p className="text-sm text-gray-400 mt-1">
-          Este gráfico mostra em quais horas do dia você esteve mais ativo.
-        </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+          <div>
+            <h2 className="text-xl font-semibold text-white">
+              Atividade de Commits
+            </h2>
+            <p className="text-sm text-gray-400 mt-1">
+              Visualize sua produtividade ao longo do tempo.
+            </p>
+          </div>
+          {/* Seletor de Período */}
+          <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
+            {periodOptions.map((option) => (
+              <button
+                key={option.key}
+                onClick={() => setPeriod(option.key as typeof period)}
+                className={cn(
+                  "px-3 py-1 text-sm font-medium rounded-md transition-colors",
+                  period === option.key
+                    ? "bg-green-500 text-white shadow"
+                    : "text-gray-300 hover:bg-gray-700"
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
         {renderChartContent()}
       </div>
     </div>

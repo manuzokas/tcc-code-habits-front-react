@@ -170,7 +170,6 @@ app.get("/github/callback", async (req, res) => {
   }
 });
 
-
 app.get("/github/commits", async (req, res) => {
   const { userId } = req.query;
 
@@ -207,7 +206,7 @@ app.get("/github/commits", async (req, res) => {
         params: {
           q: `author:${username} author-date:>=${sinceISO}`,
           sort: "author-date",
-          order: "desc", 
+          order: "desc",
           per_page: 100,
         },
       }
@@ -269,6 +268,112 @@ app.get("/github/commits", async (req, res) => {
       error.response?.data || error.message
     );
     res.status(500).send("Erro ao buscar commits.");
+  }
+});
+
+app.get("/github/commits-period", async (req, res) => {
+  const { userId, period } = req.query;
+
+  if (!userId || !period) {
+    return res.status(400).send("User ID and period are required.");
+  }
+
+  try {
+    const days = period === "7days" ? 7 : 30;
+    const allDatesInRange = [];
+    for (let i = 0; i < days; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      allDatesInRange.push(d.toISOString().split("T")[0]);
+    }
+    const startDateISO = allDatesInRange[allDatesInRange.length - 1];
+    const endDateISO = allDatesInRange[0];
+
+    const { data: existingData, error: fetchError } = await supabase
+      .from("health_metrics_daily")
+      .select("date, value")
+      .eq("user_id", userId)
+      .eq("metric_type", "commit_count")
+      .gte("date", startDateISO)
+      .lte("date", endDateISO);
+
+    if (fetchError) throw fetchError;
+
+    const existingDates = new Set(existingData.map((d) => d.date));
+
+    const missingDates = allDatesInRange.filter((d) => !existingDates.has(d));
+
+    if (missingDates.length > 0) {
+      console.log(`Backfill necessário para ${missingDates.length} dias.`);
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("github_access_token, github_username")
+        .eq("id", userId)
+        .single();
+
+      if (!profile?.github_access_token) {
+        return res.status(404).send("GitHub account not linked.");
+      }
+
+      const accessToken = profile.github_access_token;
+      const username = profile.github_username;
+
+      const newMetricsToUpsert = [];
+
+      for (const date of missingDates) {
+        const searchResponse = await axios.get(
+          "https://api.github.com/search/commits",
+          {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              "X-GitHub-Api-Version": "2022-11-28",
+              Accept: "application/vnd.github.cloak-preview",
+            },
+            params: { q: `author:${username} author-date:${date}` },
+          }
+        );
+
+        const commitCount = searchResponse.data.total_count;
+
+        newMetricsToUpsert.push({
+          user_id: userId,
+          metric_type: "commit_count",
+          value: commitCount.toString(),
+          date: date,
+          last_updated: new Date().toISOString(),
+        });
+      }
+
+      if (newMetricsToUpsert.length > 0) {
+        const { error: upsertError } = await supabase
+          .from("health_metrics_daily")
+          .upsert(newMetricsToUpsert, {
+            onConflict: "user_id,metric_type,date",
+          });
+        if (upsertError) throw upsertError;
+      }
+    }
+
+    const { data: finalData, error: finalFetchError } = await supabase
+      .from("health_metrics_daily")
+      .select("date, value")
+      .eq("user_id", userId)
+      .eq("metric_type", "commit_count")
+      .gte("date", startDateISO)
+      .lte("date", endDateISO)
+      .order("date", { ascending: true });
+
+    if (finalFetchError) throw finalFetchError;
+
+    const commitHistory = finalData.map((item) => ({
+      date: item.date,
+      commits: parseInt(item.value, 10) || 0,
+    }));
+
+    res.json({ history: commitHistory });
+  } catch (error) {
+    console.error("Erro na rota /github/commits-period:", error.message);
+    res.status(500).send("Erro ao buscar histórico de commits.");
   }
 });
 

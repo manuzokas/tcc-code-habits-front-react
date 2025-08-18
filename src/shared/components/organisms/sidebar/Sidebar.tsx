@@ -100,7 +100,7 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
                     `flex items-center gap-3 p-3 rounded-lg transition-colors ${
                       isActive
                         ? "bg-blue-500/10 text-green-400"
-                        : "hover:bg-blue-800/50 text-gray-300"
+                        : "hover:bg-blue-500/10 text-gray-300"
                     }`
                   }
                 >
