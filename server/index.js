@@ -207,7 +207,7 @@ app.get("/github/commits", async (req, res) => {
         params: {
           q: `author:${username} author-date:>=${sinceISO}`,
           sort: "author-date",
-          order: "asc",
+          order: "desc", 
           per_page: 100,
         },
       }
@@ -216,41 +216,53 @@ app.get("/github/commits", async (req, res) => {
     const commits = searchResponse.data.items;
     const totalCommits = searchResponse.data.total_count;
 
-    const commitTimestamps = commits.map(
-      (commit) => commit.commit.author.date
-    );
+    const commitTimestamps = commits.map((commit) => commit.commit.author.date);
+
+    const recentCommits = commits.map((commit) => ({
+      repoName: commit.repository.name,
+      message: commit.commit.message,
+      url: commit.html_url,
+      time: new Date(commit.commit.author.date).toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "America/Sao_Paulo",
+      }),
+    }));
 
     const today = new Date().toISOString().split("T")[0];
     const metricsToUpsert = [
-        {
-            user_id: userId,
-            metric_type: 'commit_count',
-            value: totalCommits.toString(),
-            date: today,
-            last_updated: new Date().toISOString()
-        },
-        {
-            user_id: userId,
-            metric_type: 'commit_timestamps',
-            value: JSON.stringify(commitTimestamps),
-            date: today,
-            last_updated: new Date().toISOString()
-        }
+      {
+        user_id: userId,
+        metric_type: "commit_count",
+        value: totalCommits.toString(),
+        date: today,
+        last_updated: new Date().toISOString(),
+      },
+      {
+        user_id: userId,
+        metric_type: "commit_timestamps",
+        value: JSON.stringify(commitTimestamps),
+        date: today,
+        last_updated: new Date().toISOString(),
+      },
     ];
-    
+
     const { error: upsertError } = await supabase
-      .from('health_metrics_daily')
-      .upsert(metricsToUpsert, { onConflict: 'user_id,metric_type,date' });
+      .from("health_metrics_daily")
+      .upsert(metricsToUpsert, { onConflict: "user_id,metric_type,date" });
 
     if (upsertError) {
-        console.error("Erro ao salvar métricas de commits no Supabase:", upsertError);
+      console.error(
+        "Erro ao salvar métricas de commits no Supabase:",
+        upsertError
+      );
     }
-    
+
     res.json({
       count: totalCommits,
-      timestamps: commitTimestamps, 
+      timestamps: commitTimestamps,
+      recentCommits: recentCommits,
     });
-
   } catch (error) {
     console.error(
       "Erro ao buscar commits do GitHub:",

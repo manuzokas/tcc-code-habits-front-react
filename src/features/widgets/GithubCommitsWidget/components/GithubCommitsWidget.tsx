@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { FaGithub } from "react-icons/fa";
 import { useGithubCommits } from "../hooks/useGithubCommits";
 import { SpinnerIcon } from "@phosphor-icons/react";
@@ -6,8 +6,21 @@ import { Button } from "@/shared/components/atoms/Button";
 import { Card } from "@/shared/components/atoms/Card";
 
 export const GithubCommitsWidget: React.FC = () => {
-  const { isGithubConnected, commitsCount, isLoading, error, handleConnect } =
-    useGithubCommits();
+  const [isExpanded, setIsExpanded] = useState(false);
+  const MAX_COMMITS_VISIBLE = 2;
+
+  const {
+    isGithubConnected,
+    commitsCount,
+    recentCommits,
+    isLoading,
+    error,
+    handleConnect,
+  } = useGithubCommits();
+
+  const handleToggleExpand = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   const renderContent = () => {
     if (isLoading) {
@@ -36,11 +49,52 @@ export const GithubCommitsWidget: React.FC = () => {
       );
     }
 
+    const commitsToShow = isExpanded
+      ? recentCommits
+      : recentCommits.slice(0, MAX_COMMITS_VISIBLE);
+
+    const hasMoreCommits = recentCommits.length > MAX_COMMITS_VISIBLE;
+
     return (
-      <div className="text-sm text-gray-400 text-center mt-4">
-        {commitsCount === 0
-          ? "Nenhum commit hoje. Vamos codificar!"
-          : `Você está indo muito bem! Continue assim.`}
+      <div className="flex flex-col mt-2">
+        {commitsToShow.length > 0 ? (
+          <div className="space-y-2">
+            {commitsToShow.map((commit, idx) => (
+              <a
+                href={commit.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                key={idx}
+                className="block bg-gray-800 rounded-lg p-2 border border-gray-700 transition-colors hover:bg-gray-700"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-blue-400 truncate">
+                    {commit.repoName}
+                  </span>
+                  <span className="text-xs text-gray-400">{commit.time}</span>
+                </div>
+                <p className="text-xs text-gray-300 mt-1 truncate">
+                  {commit.message}
+                </p>
+              </a>
+            ))}
+
+            {hasMoreCommits && (
+              <button
+                onClick={handleToggleExpand}
+                className="w-full text-center text-xs font-medium text-blue-400 hover:underline mt-2 pt-1"
+              >
+                {isExpanded
+                  ? "Mostrar menos"
+                  : `Mostrar mais ${recentCommits.length - MAX_COMMITS_VISIBLE} commits...`}
+              </button>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-400 text-center mt-4">
+            Nenhum commit hoje. Vamos codificar!
+          </p>
+        )}
       </div>
     );
   };
@@ -52,7 +106,6 @@ export const GithubCommitsWidget: React.FC = () => {
           <FaGithub className="text-xl" />
           GitHub Activity
         </h2>
-
         {isGithubConnected && !isLoading && !error && (
           <div className="flex items-center gap-2 text-right">
             <h3 className="text-2xl font-bold text-white leading-none">
@@ -66,7 +119,6 @@ export const GithubCommitsWidget: React.FC = () => {
           </div>
         )}
       </div>
-
       {renderContent()}
     </Card>
   );

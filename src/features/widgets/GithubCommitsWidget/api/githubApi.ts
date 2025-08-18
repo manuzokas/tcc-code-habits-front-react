@@ -4,9 +4,17 @@ export const connectToGithub = (userId: string) => {
   window.location.href = `${API_BASE_URL}/github/connect?userId=${userId}`;
 };
 
+export interface RecentCommit {
+  repoName: string;
+  message: string;
+  time: string;
+  url: string;
+}
+
 export interface GithubCommitsResponse {
   count: number;
   timestamps: string[];
+  recentCommits: RecentCommit[];
 }
 
 export const fetchDailyCommits = async (
@@ -32,5 +40,6 @@ export const fetchDailyCommits = async (
   return {
     count: data.count || 0,
     timestamps: data.timestamps || [],
+    recentCommits: data.recentCommits || [],
   };
 };
