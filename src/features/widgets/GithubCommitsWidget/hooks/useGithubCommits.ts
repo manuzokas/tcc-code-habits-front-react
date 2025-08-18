@@ -3,17 +3,10 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import type { UserProfile } from "@/features/auth/hooks/useAuth";
 import { connectToGithub, fetchDailyCommits } from "../api/githubApi";
 
-interface RecentCommit {
-  repoName: string;
-  message: string;
-  time: string;
-  url: string;
-}
-
 interface GithubCommitData {
   isGithubConnected: boolean;
   commitsCount: number | null;
-  recentCommits: RecentCommit[];
+  commitTimestamps: string[];
   isLoading: boolean;
   error: string | null;
   handleConnect: () => void;
@@ -23,7 +16,7 @@ interface GithubCommitData {
 export const useGithubCommits = (): GithubCommitData => {
   const { user, profile } = useAuth();
   const [commitsCount, setCommitsCount] = useState<number | null>(null);
-  const [recentCommits, setRecentCommits] = useState<RecentCommit[]>([]);
+  const [commitTimestamps, setCommitTimestamps] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +36,7 @@ export const useGithubCommits = (): GithubCommitData => {
       const data = await fetchDailyCommits(userId);
 
       setCommitsCount(data.count);
-      setRecentCommits(data.recentCommits || []);
+      setCommitTimestamps(data.timestamps);
     } catch (err) {
       setError((err as Error).message);
       console.error(err);
@@ -75,7 +68,7 @@ export const useGithubCommits = (): GithubCommitData => {
   return {
     isGithubConnected,
     commitsCount,
-    recentCommits,
+    commitTimestamps,
     isLoading,
     error,
     handleConnect,

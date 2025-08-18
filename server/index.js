@@ -170,6 +170,7 @@ app.get("/github/callback", async (req, res) => {
   }
 });
 
+
 app.get("/github/commits", async (req, res) => {
   const { userId } = req.query;
 
@@ -193,69 +194,63 @@ app.get("/github/commits", async (req, res) => {
 
     const since = new Date();
     since.setUTCHours(0, 0, 0, 0);
-    const sinceISO = since.toISOString();
+    const sinceISO = since.toISOString().split("T")[0];
 
-    const reposResponse = await axios.get(
-      "https://api.github.com/user/repos?per_page=100",
+    const searchResponse = await axios.get(
+      "https://api.github.com/search/commits",
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
           "X-GitHub-Api-Version": "2022-11-28",
+          Accept: "application/vnd.github.cloak-preview",
+        },
+        params: {
+          q: `author:${username} author-date:>=${sinceISO}`,
+          sort: "author-date",
+          order: "asc",
+          per_page: 100,
         },
       }
     );
 
-    const repos = reposResponse.data;
-    let totalCommits = 0;
-    let recentCommits = [];
+    const commits = searchResponse.data.items;
+    const totalCommits = searchResponse.data.total_count;
 
-    for (const repo of repos) {
-      try {
-        const commitsResponse = await axios.get(
-          `https://api.github.com/repos/${repo.owner.login}/${repo.name}/commits`,
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-              "X-GitHub-Api-Version": "2022-11-28",
-            },
-            params: {
-              author: username,
-              since: sinceISO,
-              per_page: 10,
-            },
-          }
-        );
+    const commitTimestamps = commits.map(
+      (commit) => commit.commit.author.date
+    );
 
-        const commits = commitsResponse.data;
+    const today = new Date().toISOString().split("T")[0];
+    const metricsToUpsert = [
+        {
+            user_id: userId,
+            metric_type: 'commit_count',
+            value: totalCommits.toString(),
+            date: today,
+            last_updated: new Date().toISOString()
+        },
+        {
+            user_id: userId,
+            metric_type: 'commit_timestamps',
+            value: JSON.stringify(commitTimestamps),
+            date: today,
+            last_updated: new Date().toISOString()
+        }
+    ];
+    
+    const { error: upsertError } = await supabase
+      .from('health_metrics_daily')
+      .upsert(metricsToUpsert, { onConflict: 'user_id,metric_type,date' });
 
-        totalCommits += commits.length;
-
-        commits.forEach((commit) => {
-          recentCommits.push({
-            repoName: repo.name,
-            message: commit.commit.message,
-            url: commit.html_url,
-            time: new Date(commit.commit.author.date).toLocaleTimeString(
-              "en-US",
-              {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-                timeZone: "UTC",
-              }
-            ),
-          });
-        });
-      } catch (err) {
-        console.warn(`Erro ao buscar commits do repositório ${repo.full_name}`);
-        continue;
-      }
+    if (upsertError) {
+        console.error("Erro ao salvar métricas de commits no Supabase:", upsertError);
     }
-
+    
     res.json({
       count: totalCommits,
-      recentCommits,
+      timestamps: commitTimestamps, 
     });
+
   } catch (error) {
     console.error(
       "Erro ao buscar commits do GitHub:",
