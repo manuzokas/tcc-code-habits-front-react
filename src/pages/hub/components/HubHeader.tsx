@@ -6,7 +6,7 @@ import { useRecentActivities } from "@/features/widgets/RecentActivityWidget/hoo
 import type { MissionKeyType } from "@/features/gamification/types/missions";
 import { useState } from "react";
 
-export const DashboardHeader = () => {
+export const HubHeader = () => {
   const {
     userLevel,
     xpCurrentLevel,

@@ -1,6 +1,6 @@
 type IconName = "HeartPulse" | "Brain" | "Droplet" | "Trophy" | "Activity" | 
                 "Eye" | "Accessibility" | "Lightbulb" | "StretchHorizontal" | 
-                "EyeOff" | "Coffee" | "Moon";
+                "EyeOff" | "Coffee" | "Moon" | "LayoutGrid";
 
 export const demoData = {
     postureQuality: "Boa",

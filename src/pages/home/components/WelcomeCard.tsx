@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/shared/components/atoms/Card";
 import { Icon } from "@/shared/components/atoms/Icon";
 import { MetricCard } from "@/shared/components/atoms/MetricCard";
-import { demoData } from "@/shared/constants/healthDashboard";
+import { demoData } from "@/shared/constants/healthHub";
 import type { PersonaType } from "@/features/onboarding/types/personas";
 
 interface WelcomeCardProps {

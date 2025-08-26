@@ -40,7 +40,7 @@ export const GithubCommitsWidget: React.FC = () => {
           </p>
           <Button
             onClick={handleConnect}
-            className="bg-gray-800 hover:bg-gray-700 text-sm text-white"
+            className="flex bg-gray-800 hover:bg-gray-700 text-sm text-white"
           >
             <FaGithub className="mr-2" /> Conectar ao GitHub
           </Button>

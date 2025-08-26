@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Icon } from "@/shared/components/atoms/Icon";
-import { backgroundEffects } from "@/shared/constants/healthDashboard";
+import { backgroundEffects } from "@/shared/constants/healthHub";
 import { WelcomeCard } from "@/pages/home/components/WelcomeCard";
 import { TimerSection } from "@/features/widgets/TimerWidget/components/TimerSection";
 import { HealthTipsSection } from "@/features/widgets/HealthTipsWidget/components/HealthTipsSection";
@@ -10,7 +10,7 @@ import { HealthMetricsSection } from "@/features/widgets/DevHealthMetricsWidget/
 import { AchievementsSection } from "@/features/gamification/components/AchievementsSection";
 import { WelcomeBanner } from "./WelcomeBanner";
 
-export function HealthDashboard() {
+export function HealthHub() {
   return (
     <section className="relative py-8 px-4 sm:px-6 bg-gradient-to-br from-gray-900/30 to-gray-900/10 min-h-screen overflow-hidden">
       {/* Efeitos de fundo com tema saúde */}

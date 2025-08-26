@@ -24,7 +24,7 @@ const benefits: BenefitItem[] = [
   {
     title: "health.dashboard()",
     description:
-      "Dashboard completo com suas métricas de saúde em tempo real + Timer + Player de Música",
+      "Hub completo com suas métricas de saúde em tempo real + Timer + Player de Música",
     icon: <BarChart2Icon className="w-5 h-5" />,
     badge: "analytics: enabled",
     command: "codehabits health-dashboard",

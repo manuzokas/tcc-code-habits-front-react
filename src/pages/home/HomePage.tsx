@@ -1,5 +1,5 @@
 import { Hero } from "@/shared/components/organisms/Hero";
-import { HealthDashboard } from "@/pages/home/components/HealthDemoDashboard";
+import { HealthHub } from "./components/HealthDemoHub";
 import { DevPlayground } from "@/features/dev-tools/components/DevPlayground";
 import { GamificationSystem } from "@/features/gamification/components/GamificationSystem";
 import { PersonasSection } from "@/features/onboarding/components/PersonasSection";
@@ -20,7 +20,7 @@ export function Home() {
       <BenefitsDev />
       <GamificationSystem />
       <PersonasSection />
-      <HealthDashboard />
+      <HealthHub />
       <DevPlayground />
       <Footer />
     </section>

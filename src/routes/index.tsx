@@ -5,7 +5,7 @@ import LoginPage from "@/features/auth/pages/LoginPage";
 import RegisterPage from "@/features/auth/pages/RegisterPage";
 import { RootLayout } from "@/layouts/Layout";
 import { ProtectedRoute } from "@/layouts/ProtectedRoute";
-import { DashboardPage } from "@/pages/dashboard/DashboardPage";
+import { HubPage } from "@/pages/hub/HubPage";
 import { OnboardingPage } from "@/features/onboarding/pages/OnboardingPage";
 import { MetricsPage } from "@/pages/metrics/MetricsPage";
 
@@ -29,7 +29,7 @@ export const router = createBrowserRouter([
       },
       {
         path: PATHS.SPOTIFY_CALLBACK,
-        element: <DashboardPage />,
+        element: <HubPage />,
       },
       // --- rotas PROTEGIDAS (exigem autenticacao) ---
       {
@@ -41,7 +41,7 @@ export const router = createBrowserRouter([
           },
           {
             path: PATHS.DASHBOARD,
-            element: <DashboardPage />,
+            element: <HubPage />,
           },
           {
             path: PATHS.METRICS,

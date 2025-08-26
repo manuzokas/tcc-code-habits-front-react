@@ -2,9 +2,7 @@ import { Icon } from "@/shared/components/atoms/Icon";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { motion } from "framer-motion";
 import { NavLink } from "react-router-dom";
-
-
-type IconName = "LayoutDashboard" | "Activity" | "Timer" | "Music" | "Trophy" | "Settings" | "X" | "Code" | "LogOut";
+import type { IconName } from "@/shared/types/iconTypes";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -27,8 +25,8 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
   const xpProgressPercentage = (xpCurrentLevel / XP_PER_LEVEL) * 100;
 
 
-  const navItems: { name: string; icon: IconName; path: string }[] = [ 
-    { name: "Dashboard", icon: "LayoutDashboard", path: "/dashboard" },
+  const navItems: { name: string; icon: IconName; path: string }[] = [
+    { name: "Hub", icon: "LayoutGrid", path: "/hub" },
     { name: "Métricas", icon: "Activity", path: "/metrics" },
     { name: "Timer", icon: "Timer", path: "/timer" },
     // { name: "Música", icon: "Music", path: "/music" },

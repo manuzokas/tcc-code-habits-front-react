@@ -3,6 +3,7 @@ export const PATHS = {
   LOGIN: "/sign-in",
   REGISTER: "/sign-up",
   DASHBOARD: "/dashboard",
+  HUB: "/hub",
   ONBOARDING: "/onboarding",
   METRICS: "/metrics",
   SPOTIFY_CALLBACK: "/dashboard/spotify-callback",

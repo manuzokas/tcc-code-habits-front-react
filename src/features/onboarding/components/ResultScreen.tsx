@@ -28,7 +28,7 @@ export const ResultScreen = ({
         className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-500 disabled:cursor-not-allowed"
         disabled={isSubmitting} // 3. Usa a prop para desabilitar o botão
       >
-        {isSubmitting ? "Salvando..." : "Continuar para o Dashboard"}
+        {isSubmitting ? "Salvando..." : "Continuar para o Hub"}
       </Button>
       <Button
         onClick={onRetry}

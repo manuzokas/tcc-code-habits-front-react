@@ -43,7 +43,7 @@ export const WelcomeBanner = () => {
             #DevWellness
           </span>
           <span className="text-xs font-medium px-3 py-1 rounded-full bg-green-700/50 text-gray-300 border border-gray-600/50">
-            #Dashboard
+            #Hub
           </span>
         </div>
       </div>

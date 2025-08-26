@@ -1,15 +1,18 @@
 // shared/types/iconTypes.ts
-export type IconName = 
-  | "HeartPulse" 
-  | "Brain" 
-  | "Droplet" 
-  | "Trophy" 
+export type IconName =
+  | "HeartPulse"
+  | "Brain"
+  | "Droplet"
+  | "Trophy"
   | "Activity"
-  | "Eye" 
-  | "Accessibility" 
-  | "Lightbulb" 
+  | "Eye"
+  | "Accessibility"
+  | "Lightbulb"
   | "StretchHorizontal"
-  | "EyeOff" 
-  | "Coffee" 
+  | "EyeOff"
+  | "Timer"
+  | "Coffee"
   | "Moon"
+  | "LayoutGrid"
+  | "Settings"
   | "Sparkles";
