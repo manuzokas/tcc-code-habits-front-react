@@ -8,10 +8,8 @@ import { useState } from "react";
 export const RecentActivitiesSection = () => {
   const { activities, isLoading, refetch } = useRecentActivities();
   const [isRefreshing, setIsRefreshing] = useState(false);
-  // Novo estado para controlar se a lista está expandida
   const [isExpanded, setIsExpanded] = useState(false);
-  // Constante para o número máximo de itens visíveis
-  const MAX_ACTIVITIES_VISIBLE = 3;
+  const MAX_ACTIVITIES_VISIBLE = 1;
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -28,12 +26,10 @@ export const RecentActivitiesSection = () => {
     setIsExpanded(!isExpanded);
   };
 
-  // Lógica para determinar quais atividades exibir, com verificação de nulidade
   const activitiesToShow = isExpanded
     ? activities
     : activities?.slice(0, MAX_ACTIVITIES_VISIBLE);
 
-  // Verificação de nulidade antes de checar o tamanho
   const hasMoreActivities =
     activities && activities.length > MAX_ACTIVITIES_VISIBLE;
 
@@ -71,7 +67,6 @@ export const RecentActivitiesSection = () => {
             Carregando atividades...
           </div>
         ) : activities && activities.length > 0 ? (
-          // Renderiza a lista de atividades (a variável `activitiesToShow`)
           <>
             {activitiesToShow?.map((activity) => (
               <ActivityItem
@@ -85,7 +80,6 @@ export const RecentActivitiesSection = () => {
                 compact
               />
             ))}
-            {/* Botão de expandir/recolher */}
             {hasMoreActivities && (
               <button
                 onClick={handleToggleExpand}
@@ -114,7 +108,6 @@ export const RecentActivitiesSection = () => {
         )}
       </div>
 
-      {/* Efeito sutil ao recarregar */}
       {isRefreshing && (
         <motion.div
           initial={{ opacity: 0 }}

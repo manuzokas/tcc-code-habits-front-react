@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Icon } from "@/shared/components/atoms/Icon";
 import { useCalendarEvents } from "../hooks/useCalendarEvents";
 import type { CalendarEvent, NewCalendarEvent } from "../types/calendar";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const MiniCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -12,9 +13,19 @@ export const MiniCalendar = () => {
     x: number;
     y: number;
   } | null>(null);
+
+  const [expanded, setExpanded] = useState(false);
   const [isFlipped, setIsFlipped] = useState(false);
 
-  const { events, isLoading, addEvent } = useCalendarEvents(currentDate);
+  const toggleExpand = () => {
+    setExpanded(!expanded);
+    if (isFlipped) {
+      setIsFlipped(false);
+    }
+  };
+
+  const { events, isLoading, addEvent, deleteEvent } =
+    useCalendarEvents(currentDate);
 
   const monthNames = [
     "Janeiro",
@@ -30,7 +41,6 @@ export const MiniCalendar = () => {
     "Novembro",
     "Dezembro",
   ];
-
   const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   const firstDayOfMonth = new Date(
@@ -50,19 +60,18 @@ export const MiniCalendar = () => {
       currentDate.getMonth(),
       day
     );
-    return events.filter((event) => {
-      const eventStartDate = new Date(event.start_time);
-      return eventStartDate.toDateString() === dayDate.toDateString();
-    });
+    return events.filter(
+      (event) =>
+        new Date(event.start_time).toDateString() === dayDate.toDateString()
+    );
   };
 
   const handleDayClick = (date: Date) => {
     setSelectedDate(date);
     const dayEvents = getEventsForDay(date.getDate());
+    // se houver eventos, vira o card para mostrar a lista
     if (dayEvents.length > 0) {
       setIsFlipped(true);
-    } else {
-      setNewEventTitle("");
     }
   };
 
@@ -91,7 +100,6 @@ export const MiniCalendar = () => {
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="w-8 h-8"></div>);
     }
-
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(
         currentDate.getFullYear(),
@@ -101,7 +109,6 @@ export const MiniCalendar = () => {
       const isSelected = selectedDate?.toDateString() === date.toDateString();
       const isToday = date.toDateString() === new Date().toDateString();
       const hasEvent = getEventsForDay(day).length > 0;
-
       days.push(
         <button
           key={`day-${day}`}
@@ -128,7 +135,6 @@ export const MiniCalendar = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1)
     );
-    setIsFlipped(false);
     setSelectedDate(null);
   };
 
@@ -136,13 +142,11 @@ export const MiniCalendar = () => {
     setCurrentDate(
       new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1)
     );
-    setIsFlipped(false);
     setSelectedDate(null);
   };
 
   const handleAddEvent = async () => {
     if (!selectedDate || !newEventTitle.trim()) return;
-
     const newEvent: NewCalendarEvent = {
       title: newEventTitle.trim(),
       description: null,
@@ -151,13 +155,24 @@ export const MiniCalendar = () => {
       is_all_day: false,
       location: null,
     };
-
     try {
       await addEvent(newEvent);
       setNewEventTitle("");
       setIsFlipped(true);
     } catch (error) {
       console.error("Erro ao adicionar evento:", error);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    try {
+      await deleteEvent(eventId);
+      if (selectedDayEvents.length === 1) {
+        setIsFlipped(false);
+        setSelectedDate(null);
+      }
+    } catch (error) {
+      console.error("Erro ao deletar evento:", error);
     }
   };
 
@@ -171,10 +186,8 @@ export const MiniCalendar = () => {
     : [];
 
   return (
-    <div
-      className={`bg-gray-900 rounded-xl border border-green-600 shadow-lg shadow-green-500/30 w-full max-w-xs mx-auto p-4 relative overflow-hidden ${
-        selectedDate && !isFlipped ? "h-[360px]" : "h-[300px]"
-      }`}
+    <section
+      className={`relative bg-gray-900 rounded-xl border border-green-400 p-5 shadow-lg shadow-green-500/20 hover:shadow-green-500/40 transition-all duration-300 group w-full max-w-xs mx-auto overflow-hidden ${expanded ? "h-auto" : "h-20"}`}
     >
       {hoveredDayEvents.length > 0 && tooltipPosition && (
         <div
@@ -194,140 +207,183 @@ export const MiniCalendar = () => {
         </div>
       )}
 
+      {/* CABEÇALHO DO WIDGET */}
       <div
-        className={`transition-all duration-300 ease-in-out ${isFlipped ? "opacity-0 h-0 overflow-hidden" : "opacity-100 h-auto"}`}
+        className="flex items-center justify-between relative z-10 cursor-pointer"
+        onClick={toggleExpand}
       >
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={prevMonth}
-            className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
-          >
-            <Icon name="ChevronLeft" className="w-5 h-5" />
-          </button>
-
-          <h3 className="text-lg font-medium text-gray-200">
-            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-          </h3>
-
-          <button
-            onClick={nextMonth}
-            className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
-          >
-            <Icon name="ChevronRight" className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {dayNames.map((day) => (
-            <div
-              key={day}
-              className="text-center text-xs text-gray-500 font-medium"
-            >
-              {day}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-1">
-          {isLoading ? (
-            <div className="col-span-7 text-center text-gray-400 text-sm py-4">
-              Carregando...
-            </div>
-          ) : (
-            renderDays()
-          )}
-        </div>
-
-        <div
-          className={`transition-all duration-300 overflow-hidden ${
-            selectedDate ? "max-h-20 pt-3 border-t border-gray-800" : "max-h-0"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <input
-              type="text"
-              placeholder="Novo evento..."
-              value={newEventTitle}
-              onChange={(e) => setNewEventTitle(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
-              className="flex-1 px-3 py-2 bg-gray-800 text-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 border border-gray-700 text-sm"
-            />
-            <button
-              onClick={handleAddEvent}
-              disabled={!newEventTitle.trim()}
-              className={`p-2 rounded-lg transition-colors ${
-                newEventTitle.trim()
-                  ? "bg-purple-600 hover:bg-purple-700 text-white"
-                  : "bg-gray-800 text-gray-500 cursor-not-allowed"
-              }`}
-            >
-              <Icon name="Plus" className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-green-500/10 rounded-lg border border-green-400/20 group-hover:bg-green-500/20 transition-colors duration-300">
+            <Icon name="Calendar" className="w-5 h-5 text-green-400" />
+          </div>
+          <div>
+            <h3 className="bg-gradient-to-r font-semibold from-green-300 to-green-300 bg-clip-text text-transparent">
+              Calendário
+            </h3>
+            <p className="text-xs text-green-400/80">
+              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+            </p>
           </div>
         </div>
+        <button
+          className="text-green-400 hover:text-green-300 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            toggleExpand();
+          }}
+        >
+          <Icon
+            name="ChevronDown"
+            className={`w-5 h-5 transition-transform duration-300 ${expanded ? "rotate-180" : ""}`}
+          />
+        </button>
       </div>
 
-      <div
-        className={`transition-all duration-300 ease-in-out ${isFlipped ? "opacity-100 h-auto" : "opacity-0 h-0 overflow-hidden"}`}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={handleBackToCalendar}
-            className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
+      {/* CONTEÚDO EXPANSÍVEL */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mt-4 relative z-10 overflow-hidden"
           >
-            <Icon name="ChevronLeft" className="w-5 h-5" />
-          </button>
-          <h3 className="text-lg font-medium text-gray-200">
-            {selectedDate?.toLocaleDateString("pt-BR", {
-              weekday: "short",
-              day: "numeric",
-              month: "short",
-            })}
-          </h3>
-          <div className="w-10"></div>
-        </div>
-
-        <div className="max-h-[220px] overflow-y-auto pr-2">
-          {selectedDayEvents.length > 0 ? (
-            <div className="space-y-2">
-              {selectedDayEvents.map((event) => (
-                <div
-                  key={event.id}
-                  className="bg-gray-800 rounded-lg p-3 flex items-start gap-3"
+            <AnimatePresence mode="wait">
+              {/* VISTA DO CALENDÁRIO */}
+              {!isFlipped && (
+                <motion.div
+                  key="calendar-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
                 >
-                  <div className="bg-purple-500 rounded-full w-3 h-3 mt-1 flex-shrink-0"></div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-100">{event.title}</h4>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {new Date(event.start_time).toLocaleTimeString("pt-BR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={prevMonth}
+                      className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
+                    >
+                      <Icon name="ChevronLeft" className="w-5 h-5" />
+                    </button>
+                    <h3 className="text-md font-medium text-gray-200">
+                      {monthNames[currentDate.getMonth()]}{" "}
+                      {currentDate.getFullYear()}
+                    </h3>
+                    <button
+                      onClick={nextMonth}
+                      className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
+                    >
+                      <Icon name="ChevronRight" className="w-5 h-5" />
+                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6 text-gray-500 text-sm">
-              Nenhum evento marcado
-            </div>
-          )}
-        </div>
+                  <div className="grid grid-cols-7 gap-1 mb-2">
+                    {dayNames.map((day) => (
+                      <div
+                        key={day}
+                        className="text-center text-xs text-gray-500 font-medium"
+                      >
+                        {day}
+                      </div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-1">
+                    {isLoading ? (
+                      <div className="col-span-7 text-center text-gray-400 text-sm py-4">
+                        Carregando...
+                      </div>
+                    ) : (
+                      renderDays()
+                    )}
+                  </div>
+                  <div
+                    className={`transition-all duration-300 overflow-hidden ${selectedDate && !isFlipped ? "max-h-20 pt-3 mt-2 border-t border-gray-800" : "max-h-0"}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Novo evento..."
+                        value={newEventTitle}
+                        onChange={(e) => setNewEventTitle(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
+                        className="flex-1 px-3 py-2 bg-gray-800 text-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 border border-gray-700 text-sm"
+                      />
+                      <button
+                        onClick={handleAddEvent}
+                        disabled={!newEventTitle.trim()}
+                        className={`p-2 rounded-lg transition-colors ${newEventTitle.trim() ? "bg-purple-600 hover:bg-purple-700 text-white" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}
+                      >
+                        <Icon name="Plus" className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-        <div className="mt-4 pt-3 border-t border-gray-800">
-          <button
-            onClick={() => {
-              setIsFlipped(false);
-              setNewEventTitle("");
-            }}
-            className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors text-sm"
-          >
-            <Icon name="Plus" className="w-4 h-4" />
-            Adicionar Evento
-          </button>
-        </div>
-      </div>
-    </div>
+              {/* VISTA DA LISTA DE EVENTOS */}
+              {isFlipped && selectedDate && (
+                <motion.div
+                  key="events-view"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <button
+                      onClick={handleBackToCalendar}
+                      className="p-1 text-gray-400 hover:text-purple-400 rounded-full hover:bg-gray-800 transition-colors"
+                    >
+                      <Icon name="ArrowLeft" className="w-5 h-5" />
+                    </button>
+                    <h3 className="text-md font-medium text-gray-200">
+                      {selectedDate.toLocaleDateString("pt-BR", {
+                        day: "numeric",
+                        month: "long",
+                      })}
+                    </h3>
+                    <div className="w-8"></div>
+                  </div>
+                  <div className="max-h-[220px] overflow-y-auto pr-2 space-y-2">
+                    {selectedDayEvents.length > 0 ? (
+                      selectedDayEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="bg-gray-800 rounded-lg p-3 flex items-center justify-between gap-3 group"
+                        >
+                          <div className="flex items-start gap-3 flex-1">
+                            <div className="bg-purple-500 rounded-full w-2.5 h-2.5 mt-1.5 flex-shrink-0"></div>
+                            <div className="flex-1">
+                              <h4 className="font-medium text-gray-100 text-sm">
+                                {event.title}
+                              </h4>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(event.start_time).toLocaleTimeString(
+                                  "pt-BR",
+                                  { hour: "2-digit", minute: "2-digit" }
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteEvent(event.id)}
+                            className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <Icon name="Trash2" className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 text-gray-500 text-sm">
+                        Nenhum evento para este dia.
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
   );
 };
