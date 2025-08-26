@@ -4,13 +4,14 @@ import { ProductivityTimer } from "@/features/widgets/TimerWidget/components/Tim
 // import { AchievementsSection } from "@/features/gamification/components/AchievementsSection";
 import { HealthMetricsSection } from "@/features/widgets/DevHealthMetricsWidget/components/HealthMetricsSection";
 import { RecentActivitiesSection } from "@/features/widgets/RecentActivityWidget/components/ActivitiesSection";
-import PreCodeSetupCheck from "@/features/widgets/PreCodeSetupWidget/components/PreCodeSetupCheck";
+// import PreCodeSetupCheck from "@/features/widgets/PreCodeSetupWidget/components/PreCodeSetupCheck";
 import SmartAlarms from "@/features/widgets/AlarmsWidget/components/SmartAlarms";
 import { HubHeader } from "@/pages/hub/components/HubHeader";
 import { MoodWidget } from "@/features/widgets/MoodWidget/components/MoodWidget";
 import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniCalendar";
 import GithubCommitsWidget from "@/features/widgets/GithubCommitsWidget/components/GithubCommitsWidget";
-import { HealthTipsSection } from "../../features/widgets/HealthTipsWidget/components/HealthTipsSection";
+// import { HealthTipsSection } from "../../features/widgets/HealthTipsWidget/components/HealthTipsSection";
+import { FeedbackWidget } from "@/features/widgets/FeedbackWidget/components/FeedbackWidget";
 
 export function HubPage() {
 
@@ -37,12 +38,13 @@ export function HubPage() {
           transition={{ delay: 0.3 }}
           className="flex flex-col gap-6 h-fit"
         >
-          <PreCodeSetupCheck />
+          {/* <PreCodeSetupCheck /> */}
           <SmartAlarms />
           <section className="bg-gray-900/20 shadow-lg shadow-blue-200 rounded-xl w-fit mx-auto justify-center border border-white/10 p-5">
             <ProductivityTimer />
           </section>
-          <HealthTipsSection />
+          <FeedbackWidget/>
+          {/* <HealthTipsSection /> */}
         </motion.div>
 
         <motion.div
