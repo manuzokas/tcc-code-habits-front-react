@@ -5,8 +5,11 @@ import { useGamification } from "@/features/gamification/hooks/useGamification";
 import { useRecentActivities } from "@/features/widgets/RecentActivityWidget/hooks/useRecentActivities";
 import type { MissionKeyType } from "@/features/gamification/types/missions";
 import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const HubHeader = () => {
+  const [isExpanded, setIsExpanded] = useState(true);
+
   const {
     userLevel,
     xpCurrentLevel,
@@ -33,7 +36,6 @@ export const HubHeader = () => {
     missionKey: MissionKeyType
   ) => {
     setIsCompletingMission(missionKey);
-
     try {
       await handleComplete(missionKey);
       await refetchActivities();
@@ -46,112 +48,141 @@ export const HubHeader = () => {
   };
 
   return (
-    <header className="top-0 z-30 bg-gray-950 backdrop-blur-xs border-b border-emerald-600 shadow-emerald-700 shadow-md mb-5">
+    <motion.header
+      className="top-0 z-30 bg-gray-950 backdrop-blur-xs border-b border-emerald-600 shadow-emerald-700 shadow-md mb-5 overflow-visible"
+      initial={{ height: "auto" }}
+      animate={{ height: isExpanded ? "auto" : "32px" }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
       <div className="container mx-auto px-9 py-7">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
-            <div className="relative shrink-0">
-              <div
-                className="w-14 h-14 rounded-full flex items-center justify-center
-      bg-gradient-to-br from-gray-50 to-white dark:from-blue-900 dark:to-green-900
-      border-2 border-emerald-200 dark:border-emerald-400/50
-      shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]"
-              >
-                <span className="text-2xl font-bold text-emerald-600 dark:text-green-300">
-                  {isLoadingGamification ? "-" : userLevel}
-                </span>
-                <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1 border-2 border-white dark:border-gray-800">
-                  <Icon name="Star" className="w-3 h-3 text-white" />
-                </div>
-              </div>
-            </div>
-
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex items-center justify-between gap-2">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate">
-                  Seu Progresso
-                </h2>
-                <span className="text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1">
-                  <Icon name="Sparkles" className="w-3 h-3" />
-                  <span> complete tasks</span>
-                </span>
-              </div>
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex items-center gap-4 p-4 bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+                  <div className="relative shrink-0">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300"
-                      style={{
-                        width: `${
-                          isLoadingGamification ? 0 : xpProgressPercentage
-                        }%`,
-                      }}
-                    />
+                      className="w-14 h-14 rounded-full flex items-center justify-center
+                          bg-gradient-to-br from-gray-50 to-white dark:from-blue-900 dark:to-green-900
+                          border-2 border-emerald-200 dark:border-emerald-400/50
+                          shadow-[0_4px_6px_-1px_rgba(0,0,0,0.05)]"
+                    >
+                      <span className="text-2xl font-bold text-emerald-600 dark:text-green-300">
+                        {isLoadingGamification ? "-" : userLevel}
+                      </span>
+                      <div className="absolute -bottom-1 -right-1 bg-yellow-400 rounded-full p-1 border-2 border-white dark:border-gray-800">
+                        <Icon name="Star" className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded">
-                    {isLoadingGamification
-                      ? "0"
-                      : Math.round(xpProgressPercentage)}
-                    %
-                  </span>
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 truncate">
+                        Seu Progresso
+                      </h2>
+                      <span className="text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 px-2.5 py-1 rounded-full whitespace-nowrap flex items-center gap-1">
+                        <Icon name="Sparkles" className="w-3 h-3" />
+                        <span> complete tasks</span>
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-2.5 bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-300"
+                            style={{
+                              width: `${
+                                isLoadingGamification ? 0 : xpProgressPercentage
+                              }%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400 whitespace-nowrap bg-gray-100 dark:bg-gray-700/50 px-2 py-0.5 rounded">
+                          {isLoadingGamification
+                            ? "0"
+                            : Math.round(xpProgressPercentage)}
+                          %
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          <span className="text-teal-500 dark:text-teal-400">
+                            {isLoadingGamification
+                              ? "..."
+                              : `${xpToNextLevel} XP`}{" "}
+                          </span>{" "}
+                          para próximo nível
+                        </p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
+                          XP:
+                          <span className="text-cyan-500 dark:text-cyan-400">
+                            {isLoadingGamification
+                              ? "..."
+                              : `${xpCurrentLevel}`}{" "}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-
-                <div className="flex justify-between">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    <span className="text-teal-500 dark:text-teal-400">
-                      {isLoadingGamification
-                        ? "..."
-                        : `${xpToNextLevel} XP`}{" "}
-                    </span>{" "}
-                    para próximo nível
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                    XP:
-                    <span className="text-cyan-500 dark:text-cyan-400">
-                      {isLoadingGamification ? "..." : `${xpCurrentLevel}`}{" "}
-                    </span>
-                  </p>
+                <div className="flex-1 w-full min-w-0">
+                  <div className="flex justify-end mb-3">
+                    <h3 className="text-sm font-semibold text-yellow-300 bg-emerald-900/30 px-3 py-1 rounded-full inline-flex items-center gap-1 border border-yellow-400">
+                      <Icon name="Sparkles" className="w-3 h-3" />
+                      Complete suas tasks para ganhar XPs!
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap gap-2 justify-end">
+                    {isLoadingMissions ? (
+                      <p className="text-gray-400">Carregando missões...</p>
+                    ) : (
+                      Object.entries(missions).map(([key, mission]) => (
+                        <MissionButton
+                          key={key}
+                          mission={mission}
+                          onAdd={() => handleAdd(key as MissionKeyType)}
+                          onComplete={() =>
+                            handleMissionCompleteAndRefresh(
+                              key as MissionKeyType
+                            )
+                          }
+                          isLoading={isCompletingMission === key}
+                        />
+                      ))
+                    )}
+                    <div className="flex items-center gap-2 bg-yellow-600/90 px-3 py-2 rounded-lg border border-gray-700">
+                      <span className="text-sm text-gray-300">
+                        Total Missões:
+                      </span>
+                      <span className="text-sm font-mono text-yellow-400 font-bold">
+                        {Math.round(totalMissionsXp)} XP
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="flex-1 w-full min-w-0">
-            <div className="flex justify-end mb-3">
-              <h3 className="text-sm font-semibold text-yellow-300 bg-emerald-900/30 px-3 py-1 rounded-full inline-flex items-center gap-1 border border-yellow-400">
-                <Icon name="Sparkles" className="w-3 h-3" />
-                Complete suas tasks para ganhar XPs!
-              </h3>
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-end">
-              {isLoadingMissions ? (
-                <p className="text-gray-400">Carregando missões...</p>
-              ) : (
-                Object.entries(missions).map(([key, mission]) => (
-                  <MissionButton
-                    key={key}
-                    mission={mission}
-                    onAdd={() => handleAdd(key as MissionKeyType)}
-                    onComplete={() =>
-                      handleMissionCompleteAndRefresh(key as MissionKeyType)
-                    }
-                    isLoading={isCompletingMission === key}
-                  />
-                ))
-              )}
-
-              <div className="flex items-center gap-2 bg-yellow-600/90 px-3 py-2 rounded-lg border border-gray-700">
-                <span className="text-sm text-gray-300">Total Missões:</span>
-                <span className="text-sm font-mono text-yellow-400 font-bold">
-                  {Math.round(totalMissionsXp)} XP
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-    </header>
+
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-24 h-8 bg-gray-800 border border-emerald-600 rounded-full flex items-center justify-center text-emerald-400 hover:bg-gray-700 transition-colors"
+        aria-label={isExpanded ? "Esconder header" : "Mostrar header"}
+      >
+        <Icon
+          name="ChevronUp"
+          className={`w-5 h-5 transition-transform duration-300 ${
+            isExpanded ? "" : "rotate-180"
+          }`}
+        />
+      </button>
+    </motion.header>
   );
 };

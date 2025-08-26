@@ -33,18 +33,22 @@ export const GithubCommitsWidget: React.FC = () => {
 
     if (!isGithubConnected || error) {
       return (
-        <div className="flex flex-col items-center justify-center p-4 text-center">
-          <FaGithub className="text-4xl text-gray-400 mb-3" />
-          <p className="text-sm text-gray-500 mb-3">
-            Conecte sua conta do GitHub para acompanhar seus commits diários.
-          </p>
-          <Button
-            onClick={handleConnect}
-            className="flex bg-gray-800 hover:bg-gray-700 text-sm text-white"
-          >
-            <FaGithub className="mr-2" /> Conectar ao GitHub
-          </Button>
-          {error && <p className="text-red-500 mt-2 text-xs">{error}</p>}
+        <div className="mt-3">
+          <div className="flex flex-col gap-2 items-center justify-between bg-gray-800/50 p-3 rounded-lg border border-gray-700">
+            <p className="text-sm text-gray-400">
+              Conecte sua conta para ver seus commits.
+            </p>
+            <Button
+              onClick={handleConnect}
+              size="sm" // Adicionando um tamanho menor, se seu componente de botão permitir
+              className="flex bg-gray-800 hover:bg-gray-700 text-sm text-white flex-shrink-0"
+            >
+              <FaGithub className="mr-2" /> Conectar
+            </Button>
+          </div>
+          {error && (
+            <p className="text-red-500 mt-2 text-xs text-center">{error}</p>
+          )}
         </div>
       );
     }

@@ -41,7 +41,7 @@ export function HubPage() {
           {/* <PreCodeSetupCheck /> */}
           <SmartAlarms />
           <MiniCalendar />
-          <section className="bg-gray-900/20 shadow-lg shadow-blue-200 rounded-xl w-fit mx-auto justify-center border border-white/10 p-5">
+          <section className="bg-gray-900/20 shadow-lg shadow-blue-100 rounded-xl w-fit mx-auto justify-center border border-blue-200 p-5">
             <ProductivityTimer />
           </section>
           <FeedbackWidget />
@@ -55,8 +55,8 @@ export function HubPage() {
           className="flex flex-col gap-7"
         >
           <MusicPlayerSection />
-          <GithubCommitsWidget />
           <RecentActivitiesSection />
+          <GithubCommitsWidget />
           {/* <AchievementsSection /> */}
         </motion.div>
       </div>

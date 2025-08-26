@@ -222,7 +222,7 @@ export function ProductivityTimer() {
   return (
     <div
       className={`relative mx-auto w-full max-w-md border rounded-xl bg-black/60 shadow-2xl backdrop-blur-md p-6 transition-all duration-500 ${
-        sessionType === "focus" ? "border-blue-500/50" : "border-green-500/50"
+        sessionType === "focus" ? "border-blue-500" : "border-green-500"
       }`}
     >
       <AnimatePresence>
