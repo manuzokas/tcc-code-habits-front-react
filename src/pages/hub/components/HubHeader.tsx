@@ -173,7 +173,7 @@ export const HubHeader = () => {
 
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-24 h-8 bg-gray-800 border border-emerald-600 rounded-full flex items-center justify-center text-emerald-400 hover:bg-gray-700 transition-colors"
+        className="absolute ring-1 ring-green-300 bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-24 h-8 bg-gray-900 border border-emerald-600 rounded-full flex items-center justify-center text-emerald-400 hover:bg-gray-700 transition-colors"
         aria-label={isExpanded ? "Esconder header" : "Mostrar header"}
       >
         <Icon
