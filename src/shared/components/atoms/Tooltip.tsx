@@ -1,43 +1,43 @@
 import { useState } from "react";
-import { cn } from "@/assets/styles/utils/tw";
+import { motion, AnimatePresence } from "framer-motion";
 
-export interface TooltipProps {
-  content: string;
+interface TooltipProps {
   children: React.ReactNode;
-  position?: "top" | "right" | "bottom" | "left";
+  content: string;
+  className?: string;
 }
 
-export function Tooltip({ content, children, position = "top" }: TooltipProps) {
+export const Tooltip = ({ children, content, className }: TooltipProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
-  const positionClasses = {
-    top: "bottom-full mb-2 left-1/2 transform -translate-x-1/2",
-    right: "left-full ml-2 top-1/2 transform -translate-y-1/2",
-    bottom: "top-full mt-2 left-1/2 transform -translate-x-1/2",
-    left: "right-full mr-2 top-1/2 transform -translate-y-1/2",
-  };
-
   return (
-    <div className="relative inline-block">
-      <div
-        onMouseEnter={() => setIsVisible(true)}
-        onMouseLeave={() => setIsVisible(false)}
-        onClick={() => setIsVisible(!isVisible)}
-      >
-        {children}
-      </div>
+    <div
+      className="relative flex items-center"
+      onMouseEnter={() => setIsVisible(true)}
+      onMouseLeave={() => setIsVisible(false)}
+    >
+      {children}
 
-      {isVisible && (
-        <div
-          className={cn(
-            "absolute z-50 px-3 py-1.5 rounded-md bg-gray-800 text-xs text-gray-200",
-            "border border-gray-700 shadow-lg whitespace-nowrap",
-            positionClasses[position]
-          )}
-        >
-          {content}
-        </div>
-      )}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.9 }}
+            transition={{ duration: 0.18, ease: "easeOut" }}
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 z-50 pointer-events-none"
+          >
+            <div
+              className={`relative backdrop-blur-md bg-gray-900/80 border border-emerald-400/30 text-gray-100 text-xs font-medium rounded-lg shadow-lg px-3.5 py-2.5 w-60 text-center whitespace-normal break-words ${className}`}
+            >
+              {content}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-3 h-3">
+                <div className="w-3 h-3 bg-gray-900/80 border-r border-b border-emerald-400/30 rotate-45 transform origin-top-left backdrop-blur-md"></div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
-}
+};
