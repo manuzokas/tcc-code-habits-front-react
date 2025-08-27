@@ -12,11 +12,11 @@ import { MiniCalendar } from "@/features/widgets/CalendarWidget/components/MiniC
 import GithubCommitsWidget from "@/features/widgets/GithubCommitsWidget/components/GithubCommitsWidget";
 // import { HealthTipsSection } from "../../features/widgets/HealthTipsWidget/components/HealthTipsSection";
 import { FeedbackWidget } from "@/features/widgets/FeedbackWidget/components/FeedbackWidget";
+import { InterruptionsWidget } from "@/features/widgets/InterruptionsWidget/components/InterruptionsWidget";
 
 export function HubPage() {
-
   return (
-    <div className="w-full mx-auto bg-gradient-to-br from-green-950/80 via-blue-950/80 to-purple-950/40">
+    <div className="w-full mx-auto bg-gradient-to-br from-green-950 via-blue-950 to-purple-950">
       <HubHeader />
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 px-10 py-2">
@@ -27,9 +27,7 @@ export function HubPage() {
           className="flex flex-col gap-6"
         >
           <MoodWidget />
-          <section className="bg-gray-900 rounded-xl border border-green-400 p-5 shadow-lg shadow-green-500">
-            <HealthMetricsSection />
-          </section>
+          <HealthMetricsSection />
         </motion.div>
 
         <motion.div
@@ -39,12 +37,11 @@ export function HubPage() {
           className="flex flex-col gap-6 h-fit"
         >
           {/* <PreCodeSetupCheck /> */}
-          <SmartAlarms />
-          <MiniCalendar />
+          <FeedbackWidget />
+          <InterruptionsWidget />
           <section className="bg-gray-900/20 shadow-lg shadow-blue-100 rounded-xl w-fit mx-auto justify-center border border-blue-200 p-5">
             <ProductivityTimer />
           </section>
-          <FeedbackWidget />
           {/* <HealthTipsSection /> */}
         </motion.div>
 
@@ -55,8 +52,11 @@ export function HubPage() {
           className="flex flex-col gap-7"
         >
           <MusicPlayerSection />
-          <RecentActivitiesSection />
+          <SmartAlarms />
+          <MiniCalendar />
           <GithubCommitsWidget />
+          <RecentActivitiesSection />
+
           {/* <AchievementsSection /> */}
         </motion.div>
       </div>
