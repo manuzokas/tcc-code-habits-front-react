@@ -26,11 +26,9 @@ export function Sidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
 
   const navItems: { name: string; icon: IconName; path: string }[] = [
-    { name: "Hub", icon: "LayoutGrid", path: "/hub" },
+    { name: "Hub", icon: "LayoutGrid", path: "/dashboard" },
     { name: "Métricas", icon: "Activity", path: "/metrics" },
     { name: "Timer", icon: "Timer", path: "/timer" },
-    // { name: "Música", icon: "Music", path: "/music" },
-    // { name: "Conquistas", icon: "Trophy", path: "/achievements" },
     { name: "Configurações", icon: "Settings", path: "/settings" },
   ];
 
