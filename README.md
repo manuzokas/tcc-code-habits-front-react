@@ -1,8 +1,12 @@
-# CODEHABITS TCC
+# CODE HABITS TCC
 
-Este é o projeto do meu Trabalho de Conclusão de Curso (TCC), um dashboard pessoal e ferramenta de produtividade desenvolvida para ajudar o usuário a monitorar e gerenciar sua atividade digital em um único lugar.
+Este é o projeto do meu Trabalho de Conclusão de Curso (TCC) em desenvolvimento (ainda em andamento), de um dashboard pessoal e ferramenta de produtividade desenvolvida para ajudar o usuário a monitorar e gerenciar sua atividade digital em um único lugar.
 
 ---
+
+## Objetivo Principal
+
+Através de um hub central, com widgets de gerenciamento de rotina dev, os dados de rotina serão coletados e posteriormente cruzados com outros dados para criar indicadores de produtividade e gerar insights. O Code Habits exibirá isso em uma página de dashboard, com as métricas de saúde,  os gráficos de produtividade e prevenção burnout.
 
 ### 🚀 Tecnologias Utilizadas
 
@@ -15,10 +19,10 @@ Este projeto utiliza uma arquitetura de pilha completa (full-stack), com as segu
 -   **Tailwind CSS:** Framework de CSS utilitário para design responsivo e rápido.
 
 **Back-end:**
--   **Node.js (Embutido):** Um servidor back-end leve, rodando no mesmo projeto, para orquestrar as chamadas de API e proteger as chaves de acesso.
+-   **Node.js (Embutido):** Um servidor back-end leve, rodando no mesmo projeto (nono-repo), para orquestrar as chamadas de API e proteger as chaves de acesso.
 
 **Banco de Dados & Autenticação:**
--   **Supabase:** Utilizado como a solução de banco de dados e autenticação, substituindo o uso anterior do Clerk.
+-   **Supabase/PostgresSQL:** Utilizando um Baas (Backend as a Service) como nosso banco de dados.
 
 **Integrações de API:**
 -   **GitHub API:** Para rastrear e exibir a atividade diária de commits.
@@ -28,6 +32,7 @@ Este projeto utiliza uma arquitetura de pilha completa (full-stack), com as segu
 
 ### ✨ Funcionalidades Atuais
 
+-   **Widgets de Rotina Dev:** Alarme, Calendário, Registro de Mood, Timer, Registro de Interrupções, Métricas de Saúde Dev, Avaliação de Feedback de Produtividade pós Expediente e etc...
 -   **Autenticação com Supabase:** Gerenciamento seguro de usuários.
 -   **GitHub Activity Widget:** Um widget que exibe o número de commits diários, com a opção de ver os commits recentes. Cada item é clicável e redireciona para o commit no GitHub.
 -   **Integração com o Spotify:** [Adicione mais detalhes sobre a funcionalidade do Spotify se houver]
@@ -84,3 +89,13 @@ Certifique-se de ter instalado em sua máquina:
     ```
 
 Sua aplicação estará rodando em `http://localhost:5173`, pronta para uso.
+
+## 📸 Demonstração das Telas Principais
+
+<p align="center">
+  <img src="./public/home-page.png" alt="Home Page" width="600"/>
+</p>
+
+<p align="center">
+  <img src="./public/hub-page.png" alt="Página do Hub" width="600"/>
+</p>
