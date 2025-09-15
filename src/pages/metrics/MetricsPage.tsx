@@ -1,10 +1,62 @@
 import React from "react";
+import { cn } from "@/assets/styles/utils/tw";
 import { DailySummaryChart } from "@/features/metrics/components/DailySummaryChart";
 import { InterruptionsImpactChart } from "@/features/metrics/components/InterruptionsImpactChart";
 import { HealthAdherenceChart } from "@/features/metrics/components/HealthAdherenceChart";
 import { InsightsPanel } from "@/features/metrics/components/InsightsPanel";
+import { useCommitMood } from "@/features/metrics/hooks/useCommitMood";
+import { CommitMoodChart } from "@/features/metrics/components/CommitMoodChart";
+import { SpinnerIcon } from "@phosphor-icons/react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export const MetricsPage: React.FC = () => {
+  // Usa o novo hook para buscar dados de commit e humor
+  const {
+    period,
+    setPeriod,
+    data: commitMoodData,
+    isLoading,
+    error,
+  } = useCommitMood();
+  const { profile } = useAuth(); // Usado para verificar se o GitHub está conectado
+
+  const renderCommitMoodChart = () => {
+    if (isLoading) {
+      return (
+        <div className="flex justify-center items-center h-[300px]">
+          <SpinnerIcon size={32} className="animate-spin text-green-400" />
+        </div>
+      );
+    }
+    if (error) {
+      return (
+        <p className="text-red-400 text-center mt-4 h-[300px] flex items-center justify-center">
+          Erro ao carregar os dados.
+        </p>
+      );
+    }
+    // Uma verificação simples se o perfil do usuário tem um github_username
+    if (!profile?.github_username) {
+      return (
+        <p className="text-gray-400 text-center mt-4 h-[300px] flex items-center justify-center">
+          Conecte sua conta do GitHub para ver esta métrica.
+        </p>
+      );
+    }
+    if (commitMoodData.length === 0) {
+      return (
+        <p className="text-gray-400 text-center mt-4 h-[300px] flex items-center justify-center">
+          Nenhum dado de commit encontrado para este período.
+        </p>
+      );
+    }
+    return <CommitMoodChart data={commitMoodData} />;
+  };
+
+  const periodOptions = [
+    { key: "7days", label: "Últimos 7 dias" },
+    { key: "30days", label: "Últimos 30 dias" },
+  ];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full">
@@ -18,28 +70,51 @@ export const MetricsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* --- INÍCIO DO CONTAINER DO GRID NARRATIVO --- */}
-      {/* Este layout conta uma história:
-        1. Visão Geral (O que aconteceu?)
-        2. Diagnóstico (Por que aconteceu?)
-        3. Ação (O que fazer a respeito?)
-      */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* --- LINHA 1: A VISÃO GERAL --- */}
-        <div className="lg:col-span-2">
+      <div className="flex flex-col gap-8">
+        {/* --- SEÇÃO 1: GRID PRINCIPAL 2x2 --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <DailySummaryChart />
+          <HealthAdherenceChart />
+
+          {/* --- CARD DO NOVO GRÁFICO COMMIT X HUMOR --- */}
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6 flex flex-col">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-white">
+                  Atividade de Commits e Humor
+                </h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Visualize a relação entre seus commits e seu humor diário.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0 flex-shrink-0">
+                {periodOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => setPeriod(option.key as typeof period)}
+                    className={cn(
+                      "px-3 py-1 text-sm font-medium rounded-md transition-colors",
+                      period === option.key
+                        ? "bg-green-500 text-white shadow"
+                        : "text-gray-300 hover:bg-gray-700"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+            {renderCommitMoodChart()}
+          </div>
+
+          <InterruptionsImpactChart />
         </div>
 
-        {/* --- LINHA 2: O DIAGNÓSTICO (Pressão Externa vs. Equilíbrio Interno) --- */}
-        <InterruptionsImpactChart />
-        <HealthAdherenceChart />
-
-        {/* --- LINHA 3: A INTELIGÊNCIA ACIONÁVEL --- */}
+        {/* --- SEÇÃO 2: A INTELIGÊNCIA ACIONÁVEL --- */}
         <div className="lg:col-span-2">
           <InsightsPanel />
         </div>
       </div>
-      {/* --- FIM DO CONTAINER DO GRID --- */}
     </div>
   );
 };

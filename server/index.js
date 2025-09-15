@@ -528,6 +528,42 @@ app.get("/api/metrics/health-adherence", async (req, res) => {
 });
 // --- FIM DA ROTA DE HÁBITOS DE SAÚDE ---
 
+// --- ROTA PARA CORRELAÇÃO COMMIT-HUMOR ---
+app.get("/api/metrics/commit-mood", async (req, res) => {
+    const { authorization } = req.headers;
+    const { period } = req.query; // '7days' ou '30days'
+
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+        return res.status(401).json({ error: "Authorization header is missing or malformed" });
+    }
+    const token = authorization.split(" ")[1];
+
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) {
+        return res.status(401).json({ error: userError?.message || "Invalid token" });
+    }
+
+    const days = period === '7days' ? 6 : 29;
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - days);
+
+    const { data, error } = await supabase.rpc("get_commit_mood_correlation", {
+        p_user_id: user.id,
+        start_date: startDate.toISOString().split('T')[0],
+        end_date: endDate.toISOString().split('T')[0]
+    });
+
+    if (error) {
+        console.error("Erro ao chamar a função RPC get_commit_mood_correlation:", error);
+        return res.status(500).json({ error: error.message });
+    }
+
+    res.json(data);
+});
+
+// --- FIM ROTA PARA CORRELAÇÃO COMMIT-HUMOR
+
 app.listen(PORT, () => {
   console.log(
     `Servidor de autenticação do Spotify e GitHub rodando na porta ${PORT}`
