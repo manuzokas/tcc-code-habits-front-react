@@ -16,10 +16,12 @@ import {
 import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { useTimerConfig } from "../../hooks/useTimerConfig";
 import { playAlarmSound, stopAlarmSound } from "@/shared/services/audioService";
-import { useAuth } from "@/features/auth/hooks/useAuth"; 
-import { useSupabase } from "@/hooks/useSupabase"; 
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useSupabase } from "@/hooks/useSupabase";
 
 type SessionType = "focus" | "break";
+
+const TIMER_STATE_KEY = "codehabits_timer_state";
 
 export function ProductivityTimer() {
   const { config, isLoading, updateConfig } = useTimerConfig();
@@ -42,38 +44,28 @@ export function ProductivityTimer() {
     pomodoros_before_long_break: number;
   } | null>(null);
 
-  const dismissTimerAlarm = () => {
-    stopAlarmSound();
-    setIsRinging(false);
-  };
-
   const switchSession = useCallback(async () => {
-    // MODIFICADO para async
     if (!config || !user) return;
 
-    // --- INÍCIO DA LÓGICA DE SALVAMENTO ---
+    localStorage.removeItem(TIMER_STATE_KEY);
+    setIsActive(false);
+
     if (sessionType === "focus") {
       try {
         const endTime = new Date();
-        const startTime = new Date(
-          endTime.getTime() - config.focus_duration_minutes * 60 * 1000
-        );
+        const startTime = new Date(endTime.getTime() - time * 1000);
 
-        const { error } = await supabase.from("focus_sessions").insert({
+        await supabase.from("focus_sessions").insert({
           user_id: user.id,
           started_at: startTime.toISOString(),
           ended_at: endTime.toISOString(),
-          duration_minutes: config.focus_duration_minutes,
+          // Salva a duração real em minutos
+          duration_minutes: Math.round(time / 60),
         });
-
-        if (error) {
-          console.error("Erro ao salvar sessão de foco:", error.message);
-        }
       } catch (e) {
         console.error("Uma exceção ocorreu ao salvar a sessão:", e);
       }
     }
-    // --- FIM DA LÓGICA DE SALVAMENTO ---
 
     playAlarmSound();
     setIsRinging(true);
@@ -81,29 +73,115 @@ export function ProductivityTimer() {
     if (sessionType === "focus") {
       setCompletedSessions((prev) => prev + 1);
       setSessionType("break");
-      setTime(0);
     } else {
       setSessionType("focus");
-      setTime(0);
     }
+    setTime(0);
+  }, [sessionType, config, user, supabase, time]);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout | undefined;
+
+    if (isActive && config) {
+      interval = setInterval(() => {
+        const savedStateJSON = localStorage.getItem(TIMER_STATE_KEY);
+        if (!savedStateJSON) return;
+
+        const savedState = JSON.parse(savedStateJSON);
+        const elapsedSeconds = Math.floor(
+          (Date.now() - savedState.startTime) / 1000
+        );
+
+        setTime(elapsedSeconds);
+
+        const isLongBreak =
+          savedState.completedSessions > 0 &&
+          savedState.completedSessions % config.pomodoros_before_long_break ===
+            0;
+        const currentDurationInSeconds =
+          savedState.sessionType === "focus"
+            ? config.focus_duration_minutes * 60
+            : isLongBreak
+              ? config.long_break_duration_minutes * 60
+              : config.short_break_duration_minutes * 60;
+
+        if (elapsedSeconds >= currentDurationInSeconds) {
+          switchSession();
+        }
+      }, 1000);
+    }
+
+    return () => clearInterval(interval);
+  }, [isActive, config, switchSession]);
+
+  useEffect(() => {
+    if (!isLoading && config) {
+      try {
+        const savedStateJSON = localStorage.getItem(TIMER_STATE_KEY);
+        if (savedStateJSON) {
+          const savedState = JSON.parse(savedStateJSON);
+          const elapsedSeconds = Math.floor(
+            (Date.now() - savedState.startTime) / 1000
+          );
+
+          setSessionType(savedState.sessionType);
+          setCompletedSessions(savedState.completedSessions);
+          setTime(elapsedSeconds);
+          setIsActive(true);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar estado do timer:", error);
+        localStorage.removeItem(TIMER_STATE_KEY);
+      }
+    }
+  }, [isLoading, config]);
+
+  const handleToggle = () => {
+    if (isRinging) return;
+
+    if (isActive) {
+      // Pausar
+      setIsActive(false);
+      localStorage.removeItem(TIMER_STATE_KEY);
+    } else {
+      // Iniciar
+      setIsActive(true);
+      const startTime = Date.now() - time * 1000;
+      localStorage.setItem(
+        TIMER_STATE_KEY,
+        JSON.stringify({ startTime, sessionType, completedSessions })
+      );
+    }
+  };
+
+  const handleReset = useCallback(() => {
     setIsActive(false);
-  }, [sessionType, config, user, supabase]); // MODIFICADO para incluir dependências
+    stopAlarmSound();
+    setIsRinging(false);
+    setSessionType("focus");
+    setTime(0);
+    setCompletedSessions(0);
+    localStorage.removeItem(TIMER_STATE_KEY);
+  }, []);
+
+  const handleSessionButtonClick = (type: SessionType) => {
+    if (isRinging) return;
+    handleReset();
+    setSessionType(type); 
+  };
+
+  const dismissTimerAlarm = () => {
+    stopAlarmSound();
+    setIsRinging(false);
+  };
 
   const getHealthTip = useCallback((): string => {
     const tips: Record<SessionType, string[]> = {
-      focus: [
-        "Evite distrações enquanto codifica",
-        "Postura importa: ajuste sua cadeira",
-        "Hidrate-se para manter o raciocínio afiado",
-        "Use temas escuros para conforto visual",
-        "Evite sobrecarga de notificações",
-      ],
+      focus: ["Evite distrações...", "Postura importa...", "Hidrate-se..."],
       break: [
-        "Faça alongamentos de punho e ombro",
-        "Caminhe por 3 minutos",
-        "Beba água e respire fundo",
-        "Feche os olhos e relaxe a mandíbula",
-        "Olhe para fora da tela por 20 segundos",
+        "Faça alongamentos...",
+        "Caminhe por 3 minutos...",
+        "Beba água...",
       ],
     };
     return (
@@ -113,16 +191,7 @@ export function ProductivityTimer() {
     );
   }, [sessionType]);
 
-  const handleReset = useCallback(() => {
-    if (!config) return;
-    setIsActive(false);
-    stopAlarmSound();
-    setIsRinging(false);
-    setSessionType("focus");
-    setTime(0);
-    setCompletedSessions(0);
-  }, [config]);
-
+  // Efeito para carregar as configurações locais quando a config do hook muda
   useEffect(() => {
     if (config) {
       setLocalSettings({
@@ -131,45 +200,16 @@ export function ProductivityTimer() {
         long_break_duration_minutes: config.long_break_duration_minutes,
         pomodoros_before_long_break: config.pomodoros_before_long_break,
       });
-      handleReset();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config]);
-
-  useEffect(() => {
-    let interval: NodeJS.Timeout | undefined;
-    if (!config) return;
-
-    const currentDurationInSeconds =
-      sessionType === "focus"
-        ? config.focus_duration_minutes * 60
-        : completedSessions % config.pomodoros_before_long_break === 0 &&
-            completedSessions > 0
-          ? config.long_break_duration_minutes * 60
-          : config.short_break_duration_minutes * 60;
-
-    if (isActive && time < currentDurationInSeconds) {
-      interval = setInterval(() => {
-        setTime((prev) => prev + 1);
-      }, 1000);
-    } else if (isActive && time >= currentDurationInSeconds) {
-      switchSession();
-    }
-
-    return () => clearInterval(interval);
-  }, [isActive, time, sessionType, config, switchSession, completedSessions]);
 
   useEffect(() => {
     if (isMiniMode) {
       setHealthTip("");
       return;
     }
-
     setHealthTip(getHealthTip());
-    const tipInterval = setInterval(() => {
-      setHealthTip(getHealthTip());
-    }, 30000);
-
+    const tipInterval = setInterval(() => setHealthTip(getHealthTip()), 30000);
     return () => clearInterval(tipInterval);
   }, [sessionType, getHealthTip, isMiniMode]);
 
@@ -183,67 +223,48 @@ export function ProductivityTimer() {
   }
 
   const formatTime = (seconds: number): string => {
+    const isLongBreak =
+      completedSessions > 0 &&
+      completedSessions % config.pomodoros_before_long_break === 0;
     const currentDurationInSeconds =
       sessionType === "focus"
         ? config.focus_duration_minutes * 60
-        : completedSessions % config.pomodoros_before_long_break === 0 &&
-            completedSessions > 0
+        : isLongBreak
           ? config.long_break_duration_minutes * 60
           : config.short_break_duration_minutes * 60;
 
-    const remaining = currentDurationInSeconds - seconds;
+    const remaining = Math.max(0, currentDurationInSeconds - seconds);
     return `${String(Math.floor(remaining / 60)).padStart(2, "0")}:${String(
       remaining % 60
     ).padStart(2, "0")}`;
   };
 
   const progressPercentage = (): number => {
+    const isLongBreak =
+      completedSessions > 0 &&
+      completedSessions % config.pomodoros_before_long_break === 0;
     const currentDurationInSeconds =
       sessionType === "focus"
         ? config.focus_duration_minutes * 60
-        : completedSessions % config.pomodoros_before_long_break === 0 &&
-            completedSessions > 0
+        : isLongBreak
           ? config.long_break_duration_minutes * 60
           : config.short_break_duration_minutes * 60;
     if (currentDurationInSeconds === 0) return 0;
     return (time / currentDurationInSeconds) * 100;
   };
 
-  const handleToggle = () => {
-    if (isRinging) return;
-    setIsActive(!isActive);
-  };
-
-  const handleSessionButtonClick = (type: SessionType) => {
-    if (isRinging) return;
-    setIsActive(false);
-    setSessionType(type);
-    setTime(0);
-  };
-
   const handleSettingsChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setLocalSettings((prev) => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        [name]: parseInt(value),
-      };
-    });
+    setLocalSettings((prev) =>
+      prev ? { ...prev, [name]: parseInt(value) } : null
+    );
   };
 
   const handleSaveSettings = () => {
     if (localSettings) {
-      updateConfig({
-        focus_duration_minutes: localSettings.focus_duration_minutes,
-        short_break_duration_minutes:
-          localSettings.short_break_duration_minutes,
-        long_break_duration_minutes:
-          localSettings.short_break_duration_minutes * 3,
-        pomodoros_before_long_break: localSettings.pomodoros_before_long_break,
-      });
+      updateConfig(localSettings);
       setShowSettings(false);
     }
   };
@@ -314,11 +335,7 @@ export function ProductivityTimer() {
           </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`transition-colors ${
-              showSettings
-                ? "text-zinc-100"
-                : "text-zinc-400 hover:text-zinc-100"
-            }`}
+            className={`transition-colors ${showSettings ? "text-zinc-100" : "text-zinc-400 hover:text-zinc-100"}`}
           >
             <Settings size={16} />
           </button>
@@ -484,22 +501,14 @@ export function ProductivityTimer() {
               <button
                 onClick={() => handleSessionButtonClick("focus")}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
-                  sessionType === "focus"
-                    ? "bg-blue-700 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                }`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${sessionType === "focus" ? "bg-blue-700 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
               >
                 <Zap size={16} /> Foco
               </button>
               <button
                 onClick={handleToggle}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
-                  isActive
-                    ? "bg-red-700 text-white"
-                    : "bg-zinc-700 text-zinc-100"
-                }`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${isActive ? "bg-red-700 text-white" : "bg-zinc-700 text-zinc-100"}`}
               >
                 {isActive ? <Pause size={16} /> : <Play size={16} />}{" "}
                 {isActive ? "Pausar" : "Iniciar"}
@@ -507,11 +516,7 @@ export function ProductivityTimer() {
               <button
                 onClick={() => handleSessionButtonClick("break")}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
-                  sessionType === "break"
-                    ? "bg-green-700 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
-                }`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${sessionType === "break" ? "bg-green-700 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
               >
                 <Coffee size={16} /> Pausa
               </button>

@@ -10,7 +10,6 @@ import { SpinnerIcon } from "@phosphor-icons/react";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
 export const MetricsPage: React.FC = () => {
-  // Usa o novo hook para buscar dados de commit e humor
   const {
     period,
     setPeriod,
@@ -18,7 +17,7 @@ export const MetricsPage: React.FC = () => {
     isLoading,
     error,
   } = useCommitMood();
-  const { profile } = useAuth(); // Usado para verificar se o GitHub está conectado
+  const { profile } = useAuth(); 
 
   const renderCommitMoodChart = () => {
     if (isLoading) {
@@ -35,7 +34,6 @@ export const MetricsPage: React.FC = () => {
         </p>
       );
     }
-    // Uma verificação simples se o perfil do usuário tem um github_username
     if (!profile?.github_username) {
       return (
         <p className="text-gray-400 text-center mt-4 h-[300px] flex items-center justify-center">
