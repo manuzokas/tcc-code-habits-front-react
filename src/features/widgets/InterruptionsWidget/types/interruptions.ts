@@ -1,10 +1,12 @@
-export type InterruptionType = "MEETING" | "BUG";
+export type InterruptionType = "MEETING" | "BUG" | "PERSONAL_BREAK";
 
 export type InterruptionOutcome =
   | "RESOLVED"
   | "UNRESOLVED"
   | "PRODUCTIVE"
-  | "UNPRODUCTIVE";
+  | "UNPRODUCTIVE"
+  | "REFRESHING"
+  | "NOT_REFRESHING";
 
 export interface ActiveInterruption {
   id: string;

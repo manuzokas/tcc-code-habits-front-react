@@ -5,6 +5,30 @@ import { Tooltip } from "@/shared/components/atoms/Tooltip";
 import { InterruptionsIcon } from "./InterruptionsIcon";
 import { TimerDisplay } from "./TimerDisplay";
 
+const interruptionDetails = {
+  MEETING: {
+    text: "Reunião",
+    color: "bg-blue-400",
+    question: "A reunião foi produtiva?",
+    yesOutcome: "PRODUCTIVE",
+    noOutcome: "UNPRODUCTIVE",
+  },
+  BUG: {
+    text: "Bug Urgente",
+    color: "bg-red-400",
+    question: "O bug foi resolvido?",
+    yesOutcome: "RESOLVED",
+    noOutcome: "UNRESOLVED",
+  },
+  PERSONAL_BREAK: {
+    text: "Pausa Pessoal",
+    color: "bg-yellow-400",
+    question: "A pausa foi revigorante?",
+    yesOutcome: "REFRESHING",
+    noOutcome: "NOT_REFRESHING",
+  },
+};
+
 export const InterruptionsWidget = () => {
   const {
     isLoading,
@@ -18,7 +42,7 @@ export const InterruptionsWidget = () => {
 
   const renderContent = () => {
     if (activeInterruption) {
-      const isMeeting = activeInterruption.type === "MEETING";
+      const details = interruptionDetails[activeInterruption.type];
       return (
         <motion.div
           key="active"
@@ -29,11 +53,9 @@ export const InterruptionsWidget = () => {
         >
           <div className="flex items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-full ${isMeeting ? "bg-blue-400" : "bg-red-400"} animate-pulse`}
+              className={`w-2 h-2 rounded-full ${details.color} animate-pulse`}
             ></div>
-            <p className="text-sm text-gray-300">
-              {isMeeting ? "Reunião" : "Bug Urgente"}
-            </p>
+            <p className="text-sm text-gray-300">{details.text}</p>
           </div>
           <div className="flex items-center gap-3">
             <TimerDisplay elapsedSeconds={elapsedTime} />
@@ -51,13 +73,7 @@ export const InterruptionsWidget = () => {
     }
 
     if (interruptionToReview) {
-      const isMeeting = interruptionToReview.type === "MEETING";
-      const question = isMeeting
-        ? "A reunião foi produtiva?"
-        : "O bug foi resolvido?";
-      const yesOutcome = isMeeting ? "PRODUCTIVE" : "RESOLVED";
-      const noOutcome = isMeeting ? "UNPRODUCTIVE" : "UNRESOLVED";
-
+      const details = interruptionDetails[interruptionToReview.type];
       return (
         <motion.div
           key="review"
@@ -65,16 +81,18 @@ export const InterruptionsWidget = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="w-full flex flex-col items-center gap-3"
         >
-          <p className="text-sm text-gray-300">{question}</p>
+          <p className="text-sm text-gray-300">{details.question}</p>
           <div className="w-full grid grid-cols-2 gap-2">
             <button
-              onClick={() => finalizeInterruption(yesOutcome)}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onClick={() => finalizeInterruption(details.yesOutcome as any)}
               className="py-2 bg-green-500/10 hover:bg-green-500/20 text-green-300 rounded-md text-sm font-semibold transition-colors"
             >
               Sim
             </button>
             <button
-              onClick={() => finalizeInterruption(noOutcome)}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              onClick={() => finalizeInterruption(details.noOutcome as any)}
               className="py-2 bg-red-500/10 hover:bg-red-500/20 text-red-300 rounded-md text-sm font-semibold transition-colors"
             >
               Não
@@ -101,13 +119,22 @@ export const InterruptionsWidget = () => {
               <Icon name="Users" className="w-5 h-5" />
             </button>
           </Tooltip>
-          <div className="w-px h-4 bg-gray-700 mx-1"></div>{" "}
+          <div className="w-px h-4 bg-gray-700 mx-1"></div>
           <Tooltip content="Bug Urgente">
             <button
               onClick={() => startInterruption("BUG")}
               className="p-2 rounded-full hover:bg-red-500/20 text-gray-400 hover:text-red-400 transition-colors"
             >
               <Icon name="Bug" className="w-5 h-5" />
+            </button>
+          </Tooltip>
+          <div className="w-px h-4 bg-gray-700 mx-1"></div>
+          <Tooltip content="Pausa Não Planejada / Pessoal">
+            <button
+              onClick={() => startInterruption("PERSONAL_BREAK")}
+              className="p-2 rounded-full hover:bg-yellow-500/20 text-gray-400 hover:text-yellow-400 transition-colors"
+            >
+              <Icon name="Coffee" className="w-5 h-5" />
             </button>
           </Tooltip>
         </div>
