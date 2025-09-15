@@ -451,6 +451,46 @@ app.get("/api/metrics/daily-summary", async (req, res) => {
 });
 // --- FIM DA ROTA RESUMO DIÁRIO ---
 
+// --- ROTA PARA O RESUMO DE INTERRUPÇÕES ---
+app.get("/api/metrics/interruptions-summary", async (req, res) => {
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ error: "Authorization header is missing or malformed" });
+  }
+  const token = authorization.split(" ")[1];
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    return res
+      .status(401)
+      .json({ error: userError?.message || "Invalid token or user not found" });
+  }
+
+  const { data, error } = await supabase.rpc(
+    "get_daily_interruptions_summary",
+    {
+      p_user_id: user.id,
+    }
+  );
+
+  if (error) {
+    console.error(
+      "Erro ao chamar a função RPC get_daily_interruptions_summary:",
+      error
+    );
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+});
+// --- FIM DA ROTA DE INTERRUPÇÕES ---
+
 app.listen(PORT, () => {
   console.log(
     `Servidor de autenticação do Spotify e GitHub rodando na porta ${PORT}`

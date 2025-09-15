@@ -8,6 +8,7 @@ import { FaGithub } from "react-icons/fa";
 import { cn } from "@/assets/styles/utils/tw";
 import { IFEChart } from "@/features/metrics/components/IFEChart";
 import { DailySummaryChart } from "@/features/metrics/components/DailySummaryChart";
+import { InterruptionsImpactChart } from "@/features/metrics/components/InterruptionsImpactChart";
 
 export const MetricsPage: React.FC = () => {
   const {
@@ -96,29 +97,31 @@ export const MetricsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* --- INÍCIO DO CONTAINER DO GRID --- */}
-      {/* - O grid terá 1 coluna em telas pequenas e 2 colunas em telas grandes (lg).
-        - O gap (espaçamento) continua o mesmo.
+      {/* --- INÍCIO DO CONTAINER DO GRID (MODIFICADO) --- */}
+      {/* Mudamos para um grid simples de 2 colunas em telas grandes (lg).
+        Isso criará um layout 2x2 para os 4 gráficos.
       */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* --- ITEM 1: Gráfico de Correlação (ocupa a largura toda em telas grandes) --- */}
-        <div className="lg:col-span-2">
-          <DailySummaryChart />
-        </div>
+        {/* --- ITEM 1: Gráfico de Correlação --- */}
+        {/*
+          Removido 'lg:col-span-4'. Em um grid de 2 colunas, ele agora ocupa 
+          automaticamente uma coluna (50% da largura).
+        */}
+        <DailySummaryChart />
 
-        {/* --- ITEM 2: IFE Chart (ocupa uma coluna) --- */}
+        {/* --- ITEM 2: Análise de Interrupções --- */}
+        <InterruptionsImpactChart />
+
+        {/* --- ITEM 3: IFE Chart --- */}
         <IFEChart />
 
-        {/* --- ITEM 3: Atividade de Commits (ocupa uma coluna) --- */}
+        {/* --- ITEM 4: Atividade de Commits --- */}
         <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
             <div>
               <h2 className="text-xl font-semibold text-white">
                 Atividade de Commits
               </h2>
-              <p className="text-sm text-gray-400 mt-1">
-                Visualize a frequência de seus commits ao longo do tempo.
-              </p>
             </div>
             <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
               {periodOptions.map((option) => (
