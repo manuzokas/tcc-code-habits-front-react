@@ -9,6 +9,7 @@ import { cn } from "@/assets/styles/utils/tw";
 import { IFEChart } from "@/features/metrics/components/IFEChart";
 import { DailySummaryChart } from "@/features/metrics/components/DailySummaryChart";
 import { InterruptionsImpactChart } from "@/features/metrics/components/InterruptionsImpactChart";
+import { HealthAdherenceChart } from "@/features/metrics/components/HealthAdherenceChart"; // <<< ADICIONADO AQUI
 
 export const MetricsPage: React.FC = () => {
   const {
@@ -97,53 +98,57 @@ export const MetricsPage: React.FC = () => {
         </p>
       </div>
 
-      {/* --- INÍCIO DO CONTAINER DO GRID (MODIFICADO) --- */}
-      {/* Mudamos para um grid simples de 2 colunas em telas grandes (lg).
-        Isso criará um layout 2x2 para os 4 gráficos.
-      */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* --- ITEM 1: Gráfico de Correlação --- */}
-        {/*
-          Removido 'lg:col-span-4'. Em um grid de 2 colunas, ele agora ocupa 
-          automaticamente uma coluna (50% da largura).
-        */}
-        <DailySummaryChart />
+      <div className="flex flex-col gap-8">
+        {/* --- SEÇÃO 1: GRID PRINCIPAL DE PRODUTIVIDADE 2x2 --- */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <DailySummaryChart />
+          <InterruptionsImpactChart />
+          <IFEChart />
 
-        {/* --- ITEM 2: Análise de Interrupções --- */}
-        <InterruptionsImpactChart />
-
-        {/* --- ITEM 3: IFE Chart --- */}
-        <IFEChart />
-
-        {/* --- ITEM 4: Atividade de Commits --- */}
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-            <div>
-              <h2 className="text-xl font-semibold text-white">
-                Atividade de Commits
-              </h2>
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+              <div>
+                <h2 className="text-xl font-semibold text-white">
+                  Atividade de Commits
+                </h2>
+              </div>
+              <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
+                {periodOptions.map((option) => (
+                  <button
+                    key={option.key}
+                    onClick={() => setPeriod(option.key as typeof period)}
+                    className={cn(
+                      "px-3 py-1 text-sm font-medium rounded-md transition-colors",
+                      period === option.key
+                        ? "bg-green-500 text-white shadow"
+                        : "text-gray-300 hover:bg-gray-700"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
-              {periodOptions.map((option) => (
-                <button
-                  key={option.key}
-                  onClick={() => setPeriod(option.key as typeof period)}
-                  className={cn(
-                    "px-3 py-1 text-sm font-medium rounded-md transition-colors",
-                    period === option.key
-                      ? "bg-green-500 text-white shadow"
-                      : "text-gray-300 hover:bg-gray-700"
-                  )}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
+            {renderCommitChartContent()}
           </div>
-          {renderCommitChartContent()}
+        </div>
+
+        {/* --- SEÇÃO 2: BEM-ESTAR E HÁBITOS DE SAÚDE --- */}
+        <div>
+          <h2 className="text-2xl font-semibold text-white mb-4">
+            Análise de Bem-Estar
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Ocupa a largura toda em telas grandes */}
+            <div className="lg:col-span-2">
+              <HealthAdherenceChart />
+            </div>
+
+            {/* futuramente, o Painel de Insights (para predicao) pode entrar aqui ao lado */}
+            {/* <div className="bg-gray-900 border border-gray-700 rounded-xl p-6"> ... </div> */}
+          </div>
         </div>
       </div>
-      {/* --- FIM DO CONTAINER DO GRID --- */}
     </div>
   );
 };

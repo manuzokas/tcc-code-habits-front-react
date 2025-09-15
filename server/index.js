@@ -491,6 +491,43 @@ app.get("/api/metrics/interruptions-summary", async (req, res) => {
 });
 // --- FIM DA ROTA DE INTERRUPÇÕES ---
 
+// --- ROTA PARA ADERÊNCIA AOS HÁBITOS DE SAÚDE ---
+app.get("/api/metrics/health-adherence", async (req, res) => {
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ error: "Authorization header is missing or malformed" });
+  }
+  const token = authorization.split(" ")[1];
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    return res
+      .status(401)
+      .json({ error: userError?.message || "Invalid token or user not found" });
+  }
+
+  const { data, error } = await supabase.rpc("get_health_habit_adherence", {
+    p_user_id: user.id,
+  });
+
+  if (error) {
+    console.error(
+      "Erro ao chamar a função RPC get_health_habit_adherence:",
+      error
+    );
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+});
+// --- FIM DA ROTA DE HÁBITOS DE SAÚDE ---
+
 app.listen(PORT, () => {
   console.log(
     `Servidor de autenticação do Spotify e GitHub rodando na porta ${PORT}`
