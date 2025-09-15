@@ -6,16 +6,15 @@ import { CommitHistoryChart } from "@/features/metrics/components/CommitHistoryC
 import { SpinnerIcon } from "@phosphor-icons/react";
 import { FaGithub } from "react-icons/fa";
 import { cn } from "@/assets/styles/utils/tw";
+import { IFEChart } from "@/features/metrics/components/IFEChart";
 
 export const MetricsPage: React.FC = () => {
-  // Hook para os dados de HOJE
   const {
     isGithubConnected,
     commitTimestamps,
     isLoading: isLoadingToday,
     error: errorToday,
   } = useGithubCommits();
-  // Hook para os dados HISTÓRICOS
   const {
     period,
     setPeriod,
@@ -24,7 +23,7 @@ export const MetricsPage: React.FC = () => {
     error: errorHistory,
   } = useCommitHistory();
 
-  const renderChartContent = () => {
+  const renderCommitChartContent = () => {
     const isLoading = period === "today" ? isLoadingToday : isLoadingHistory;
     const error = period === "today" ? errorToday : errorHistory;
 
@@ -45,7 +44,6 @@ export const MetricsPage: React.FC = () => {
     }
 
     if (!isGithubConnected) {
-      // (O conteúdo de "não conectado" permanece o mesmo)
       return (
         <div className="text-center py-10">
           <FaGithub className="mx-auto text-5xl text-gray-500 mb-4" />
@@ -60,7 +58,6 @@ export const MetricsPage: React.FC = () => {
       );
     }
 
-    // Renderiza o gráfico correto baseado no período
     if (period === "today") {
       if (commitTimestamps.length === 0)
         return (
@@ -88,7 +85,7 @@ export const MetricsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 h-full">
-      <div className="mb-6">
+      <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">
           Métricas de Produtividade
         </h1>
@@ -97,35 +94,39 @@ export const MetricsPage: React.FC = () => {
         </p>
       </div>
 
-      <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-white">
-              Atividade de Commits
-            </h2>
-            <p className="text-sm text-gray-400 mt-1">
-              Visualize sua produtividade ao longo do tempo.
-            </p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <IFEChart />
+
+        <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+            <div>
+              <h2 className="text-xl font-semibold text-white">
+                Atividade de Commits
+              </h2>
+              <p className="text-sm text-gray-400 mt-1">
+                Visualize a frequência de seus commits ao longo do tempo.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
+              {periodOptions.map((option) => (
+                <button
+                  key={option.key}
+                  onClick={() => setPeriod(option.key as typeof period)}
+                  className={cn(
+                    "px-3 py-1 text-sm font-medium rounded-md transition-colors",
+                    period === option.key
+                      ? "bg-green-500 text-white shadow"
+                      : "text-gray-300 hover:bg-gray-700"
+                  )}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
           </div>
-          {/* Seletor de Período */}
-          <div className="flex items-center gap-2 bg-gray-800 p-1 rounded-lg mt-4 sm:mt-0">
-            {periodOptions.map((option) => (
-              <button
-                key={option.key}
-                onClick={() => setPeriod(option.key as typeof period)}
-                className={cn(
-                  "px-3 py-1 text-sm font-medium rounded-md transition-colors",
-                  period === option.key
-                    ? "bg-green-500 text-white shadow"
-                    : "text-gray-300 hover:bg-gray-700"
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
+          {renderCommitChartContent()}
         </div>
-        {renderChartContent()}
+
       </div>
     </div>
   );

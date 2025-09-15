@@ -16,11 +16,15 @@ import {
 import { useState, useEffect, useCallback, type ChangeEvent } from "react";
 import { useTimerConfig } from "../../hooks/useTimerConfig";
 import { playAlarmSound, stopAlarmSound } from "@/shared/services/audioService";
+import { useAuth } from "@/features/auth/hooks/useAuth"; 
+import { useSupabase } from "@/hooks/useSupabase"; 
 
 type SessionType = "focus" | "break";
 
 export function ProductivityTimer() {
   const { config, isLoading, updateConfig } = useTimerConfig();
+  const { user } = useAuth();
+  const supabase = useSupabase();
 
   const [isActive, setIsActive] = useState<boolean>(false);
   const [time, setTime] = useState<number>(0);
@@ -43,8 +47,33 @@ export function ProductivityTimer() {
     setIsRinging(false);
   };
 
-  const switchSession = useCallback(() => {
-    if (!config) return;
+  const switchSession = useCallback(async () => {
+    // MODIFICADO para async
+    if (!config || !user) return;
+
+    // --- INÍCIO DA LÓGICA DE SALVAMENTO ---
+    if (sessionType === "focus") {
+      try {
+        const endTime = new Date();
+        const startTime = new Date(
+          endTime.getTime() - config.focus_duration_minutes * 60 * 1000
+        );
+
+        const { error } = await supabase.from("focus_sessions").insert({
+          user_id: user.id,
+          started_at: startTime.toISOString(),
+          ended_at: endTime.toISOString(),
+          duration_minutes: config.focus_duration_minutes,
+        });
+
+        if (error) {
+          console.error("Erro ao salvar sessão de foco:", error.message);
+        }
+      } catch (e) {
+        console.error("Uma exceção ocorreu ao salvar a sessão:", e);
+      }
+    }
+    // --- FIM DA LÓGICA DE SALVAMENTO ---
 
     playAlarmSound();
     setIsRinging(true);
@@ -58,7 +87,7 @@ export function ProductivityTimer() {
       setTime(0);
     }
     setIsActive(false);
-  }, [sessionType, config]);
+  }, [sessionType, config, user, supabase]); // MODIFICADO para incluir dependências
 
   const getHealthTip = useCallback((): string => {
     const tips: Record<SessionType, string[]> = {
@@ -285,7 +314,11 @@ export function ProductivityTimer() {
           </button>
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className={`transition-colors ${showSettings ? "text-zinc-100" : "text-zinc-400 hover:text-zinc-100"}`}
+            className={`transition-colors ${
+              showSettings
+                ? "text-zinc-100"
+                : "text-zinc-400 hover:text-zinc-100"
+            }`}
           >
             <Settings size={16} />
           </button>
@@ -451,14 +484,22 @@ export function ProductivityTimer() {
               <button
                 onClick={() => handleSessionButtonClick("focus")}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${sessionType === "focus" ? "bg-blue-700 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                  sessionType === "focus"
+                    ? "bg-blue-700 text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                }`}
               >
                 <Zap size={16} /> Foco
               </button>
               <button
                 onClick={handleToggle}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${isActive ? "bg-red-700 text-white" : "bg-zinc-700 text-zinc-100"}`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                  isActive
+                    ? "bg-red-700 text-white"
+                    : "bg-zinc-700 text-zinc-100"
+                }`}
               >
                 {isActive ? <Pause size={16} /> : <Play size={16} />}{" "}
                 {isActive ? "Pausar" : "Iniciar"}
@@ -466,7 +507,11 @@ export function ProductivityTimer() {
               <button
                 onClick={() => handleSessionButtonClick("break")}
                 disabled={isRinging}
-                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${sessionType === "break" ? "bg-green-700 text-white" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
+                className={`px-3 py-1 rounded-md text-sm flex items-center gap-1 transition-colors disabled:opacity-50 ${
+                  sessionType === "break"
+                    ? "bg-green-700 text-white"
+                    : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"
+                }`}
               >
                 <Coffee size={16} /> Pausa
               </button>

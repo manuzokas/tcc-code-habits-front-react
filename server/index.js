@@ -20,7 +20,9 @@ app.use(express.json());
 app.get("/login", (req, res) => {
   const scopes =
     "streaming user-read-email user-read-private user-modify-playback-state user-read-playback-state user-read-currently-playing user-read-recently-played user-top-read";
-  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&scope=${encodeURIComponent(scopes)}&redirect_uri=${encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI)}`;
+  const spotifyAuthUrl = `https://accounts.spotify.com/authorize?response_type=code&client_id=${process.env.SPOTIFY_CLIENT_ID}&scope=${encodeURIComponent(
+    scopes
+  )}&redirect_uri=${encodeURIComponent(process.env.SPOTIFY_REDIRECT_URI)}`;
   res.redirect(spotifyAuthUrl);
 });
 
@@ -108,7 +110,11 @@ app.post("/refresh_token", async (req, res) => {
 app.get("/github/connect", (req, res) => {
   const { userId } = req.query;
   const scopes = "repo user";
-  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${process.env.GITHUB_CLIENT_ID}&redirect_uri=${process.env.GITHUB_CALLBACK_URL}&scope=${encodeURIComponent(scopes)}&state=${userId}`;
+  const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${
+    process.env.GITHUB_CLIENT_ID
+  }&redirect_uri=${
+    process.env.GITHUB_CALLBACK_URL
+  }&scope=${encodeURIComponent(scopes)}&state=${userId}`;
   res.redirect(githubAuthUrl);
 });
 
@@ -376,6 +382,44 @@ app.get("/github/commits-period", async (req, res) => {
     res.status(500).send("Erro ao buscar histórico de commits.");
   }
 });
+
+// --- ROTA PARA O ÍNDICE DE FOCO EFETIVO (IFE) ---
+app.get("/api/metrics/ife", async (req, res) => {
+  // 1. Pega o token de autenticação do cabeçalho da requisição
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ error: "Authorization header is missing or malformed" });
+  }
+  const token = authorization.split(" ")[1];
+
+  // 2. Valida o token com o Supabase para obter o usuário
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    return res
+      .status(401)
+      .json({ error: userError?.message || "Invalid token or user not found" });
+  }
+
+  // 3. Chama a função SQL 'get_daily_ife' no Supabase com o ID do usuário autenticado
+  const { data, error } = await supabase.rpc("get_daily_ife", {
+    p_user_id: user.id,
+  });
+
+  if (error) {
+    console.error("Erro ao chamar a função RPC get_daily_ife:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  // 4. Retorna os dados para o front-end
+  res.json(data);
+});
+// --- FIM DA ROTA IFE ---
 
 app.listen(PORT, () => {
   console.log(

@@ -13,7 +13,18 @@ export default defineConfig({
   server: {
     host: "127.0.0.1",
     port: 5173,
-    strictPort: true, 
-    open: true, 
+    strictPort: true,
+    open: true,
+
+    proxy: {
+      // qualquer req. que comece com '/api' sera redirecionada
+      "/api": {
+        // o alvo do redirecionamento é o servidor back-end
+        target: "http://localhost:4000",
+
+        // evitando problemas de origem/CORS
+        changeOrigin: true,
+      },
+    },
   },
 });
