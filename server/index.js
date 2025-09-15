@@ -385,7 +385,6 @@ app.get("/github/commits-period", async (req, res) => {
 
 // --- ROTA PARA O ÍNDICE DE FOCO EFETIVO (IFE) ---
 app.get("/api/metrics/ife", async (req, res) => {
-  // 1. Pega o token de autenticação do cabeçalho da requisição
   const { authorization } = req.headers;
   if (!authorization || !authorization.startsWith("Bearer ")) {
     return res
@@ -394,7 +393,6 @@ app.get("/api/metrics/ife", async (req, res) => {
   }
   const token = authorization.split(" ")[1];
 
-  // 2. Valida o token com o Supabase para obter o usuário
   const {
     data: { user },
     error: userError,
@@ -406,7 +404,6 @@ app.get("/api/metrics/ife", async (req, res) => {
       .json({ error: userError?.message || "Invalid token or user not found" });
   }
 
-  // 3. Chama a função SQL 'get_daily_ife' no Supabase com o ID do usuário autenticado
   const { data, error } = await supabase.rpc("get_daily_ife", {
     p_user_id: user.id,
   });
@@ -416,10 +413,43 @@ app.get("/api/metrics/ife", async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 
-  // 4. Retorna os dados para o front-end
   res.json(data);
 });
 // --- FIM DA ROTA IFE ---
+
+// --- ROTA PARA O RESUMO DIÁRIO (IFE, Humor, Produtividade) ---
+app.get("/api/metrics/daily-summary", async (req, res) => {
+  const { authorization } = req.headers;
+  if (!authorization || !authorization.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ error: "Authorization header is missing or malformed" });
+  }
+  const token = authorization.split(" ")[1];
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser(token);
+
+  if (userError || !user) {
+    return res
+      .status(401)
+      .json({ error: userError?.message || "Invalid token or user not found" });
+  }
+
+  const { data, error } = await supabase.rpc("get_daily_summary", {
+    p_user_id: user.id,
+  });
+
+  if (error) {
+    console.error("Erro ao chamar a função RPC get_daily_summary:", error);
+    return res.status(500).json({ error: error.message });
+  }
+
+  res.json(data);
+});
+// --- FIM DA ROTA RESUMO DIÁRIO ---
 
 app.listen(PORT, () => {
   console.log(

@@ -7,6 +7,7 @@ import { SpinnerIcon } from "@phosphor-icons/react";
 import { FaGithub } from "react-icons/fa";
 import { cn } from "@/assets/styles/utils/tw";
 import { IFEChart } from "@/features/metrics/components/IFEChart";
+import { DailySummaryChart } from "@/features/metrics/components/DailySummaryChart";
 
 export const MetricsPage: React.FC = () => {
   const {
@@ -87,16 +88,28 @@ export const MetricsPage: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 h-full">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-white">
-          Métricas de Produtividade
+          Dashboard de Produtividade e Bem-Estar
         </h1>
         <p className="text-gray-400 mt-1">
-          Analise seus padrões de trabalho e bem-estar.
+          Analise seus padrões de trabalho para otimizar sua rotina e prevenir o
+          esgotamento.
         </p>
       </div>
 
+      {/* --- INÍCIO DO CONTAINER DO GRID --- */}
+      {/* - O grid terá 1 coluna em telas pequenas e 2 colunas em telas grandes (lg).
+        - O gap (espaçamento) continua o mesmo.
+      */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* --- ITEM 1: Gráfico de Correlação (ocupa a largura toda em telas grandes) --- */}
+        <div className="lg:col-span-2">
+          <DailySummaryChart />
+        </div>
+
+        {/* --- ITEM 2: IFE Chart (ocupa uma coluna) --- */}
         <IFEChart />
 
+        {/* --- ITEM 3: Atividade de Commits (ocupa uma coluna) --- */}
         <div className="bg-gray-900 border border-gray-700 rounded-xl p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
             <div>
@@ -126,8 +139,8 @@ export const MetricsPage: React.FC = () => {
           </div>
           {renderCommitChartContent()}
         </div>
-
       </div>
+      {/* --- FIM DO CONTAINER DO GRID --- */}
     </div>
   );
 };
